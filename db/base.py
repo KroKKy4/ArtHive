@@ -1,4 +1,5 @@
 import sqlite3
+from contextlib import contextmanager
 
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import sessionmaker, Session
@@ -12,6 +13,7 @@ def create_db_engine():
     return engine
 
 
+@contextmanager
 def get_db(engine: Engine) -> Session:
     """Создание и возврат сессии для работы с базой данных."""
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

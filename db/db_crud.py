@@ -6,7 +6,7 @@ from db.models import User
 from utils import validate_password
 
 
-def get_user_by_nickname(
+def get_user_by_username(
     db: Session,
     username: str,
 ):
@@ -18,7 +18,7 @@ def register_user(
     username: str,
     password: str,
 ):
-    if get_user_by_nickname(db, username):
+    if get_user_by_username(db, username):
         return f"Пользователь с данным именем уже существует."
 
     check_password = validate_password(password)
@@ -33,4 +33,20 @@ def register_user(
     db.commit()
     db.refresh(new_user)
 
-    return new_user
+    return "Регистрация успешна! Теперь можно войти."
+
+
+def login_user(
+    db: Session,
+    username: str,
+    password: str,
+):
+    user = get_user_by_username(db, username)
+
+    if user is None:
+        raise ValueError("Пользователь не найден.")
+
+    if not bcrypt.checkpw(password.encode("utf-8"), user.password.encode("utf-8")):
+        raise ValueError("Неверный пароль.")
+
+    return user
