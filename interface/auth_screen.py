@@ -203,6 +203,12 @@ class Interface:
         password = self.reg_password_entry.get()
         confirm_password = self.reg_confirm_password_entry.get()
 
+        if password != confirm_password:
+            messagebox.showerror(
+                "Ошибка", "Пароли не совпадают. Пожалуйста, введите пароли заново."
+            )
+            return
+
         engine = create_db_engine()
         with get_db(engine) as db:
             message = register_user(db, username, password)
