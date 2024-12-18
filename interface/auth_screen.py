@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 from db.base import get_db, create_db_engine
-from db.db_crud import login_user, register_user
+from crud.user_crud import login_user, register_user
 
 
 class AuthInterface(tk.Frame):

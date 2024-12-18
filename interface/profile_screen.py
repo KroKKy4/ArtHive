@@ -1,49 +1,36 @@
 import tkinter as tk
-from tkinter import messagebox
-
-from db.models import User
+from tkinter import messagebox, simpledialog
 
 
 class ProfileInterface(tk.Frame):
     def __init__(self, master, manager, user, main_window_callback, *args, **kwargs):
-        super().__init__(master)
+        super().__init__(master, *args, **kwargs)
         self.manager = manager
+        self.user = user or self.manager.current_user
         self.main_window_callback = main_window_callback
-        self.user = user
-        self.show_profile()
+        self.canvas = None
 
-    def clear_window(self):
-        for widget in self.winfo_children():
-            widget.destroy()
+        # Настраиваем внешний контейнер
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
-    def show_profile(self):
-        self.clear_window()
+        # Создаём фрейм для содержимого
+        self.content_frame = tk.Frame(self, bg="#FFFFFF")
+        self.content_frame.grid(row=0, column=0, sticky="nsew")
 
-        # Создаём canvas с прокруткой
-        canvas = tk.Canvas(self, width=900, height=600)
-        canvas.pack(side="left", fill="both", expand=True)
+        # Создаём интерфейс
+        self.create_widgets()
 
-        # Добавляем вертикальный скроллбар
-        scrollbar = tk.Scrollbar(self, orient="vertical", command=canvas.yview)
-        scrollbar.pack(side="right", fill="y")
+    def create_top_frame(self):
+        top_frame = tk.Frame(self.content_frame, bg="#FFFFFF")
+        top_frame.pack(fill="x", side="top")  # Растягиваем по горизонтали
 
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        # Привязываем колесо мыши к прокрутке canvas
-        canvas.bind_all(
-            "<MouseWheel>", lambda event: self.on_mouse_wheel(event, canvas)
-        )
-
-        # Создаем фрейм внутри canvas для профиля
-        profile_frame = tk.Frame(canvas, bg="#FFFFFF")
-        canvas.create_window((0, 0), window=profile_frame, anchor="nw", width=900)
-
-        # Добавляем виджеты в профиль
-        top_frame = tk.Frame(profile_frame, bg="#FFFFFF")
-        top_frame.pack(fill="x", pady=10)
+        # Фрейм для кнопки "Назад"
+        left_frame = tk.Frame(top_frame, bg="#FFFFFF")
+        left_frame.pack(side="left", fill="y")
 
         back_button = tk.Button(
-            top_frame,
+            left_frame,
             text="← Назад",
             font=("Arial", 12),
             bg="#4B0082",
@@ -51,10 +38,14 @@ class ProfileInterface(tk.Frame):
             relief="solid",
             command=self.main_window_callback,
         )
-        back_button.pack(side="left", padx=10)
+        back_button.pack(padx=10, pady=5)
+
+        # Фрейм для кнопки "Выйти"
+        right_frame = tk.Frame(top_frame, bg="#FFFFFF")
+        right_frame.pack(side="right", fill="y")
 
         logout_button = tk.Button(
-            top_frame,
+            right_frame,
             text="Выйти",
             font=("Arial", 12),
             bg="#8A2BE2",
@@ -62,13 +53,18 @@ class ProfileInterface(tk.Frame):
             relief="solid",
             command=self.logout,
         )
-        logout_button.pack(side="right", padx=10)
+        logout_button.pack(padx=10, pady=5)
 
-        profile_frame_inner = tk.Frame(profile_frame, bg="#FFFFFF")
-        profile_frame_inner.pack(pady=20)
+    def create_widgets(self):
+        # Верхняя панель
+        self.create_top_frame()
+
+        # Фрейм для содержимого профиля
+        profile_info_frame = tk.Frame(self.content_frame, bg="#FFFFFF")
+        profile_info_frame.pack(pady=20, expand=True)
 
         avatar_label = tk.Label(
-            profile_frame_inner,
+            profile_info_frame,
             text="Аватар",
             font=("Arial", 12, "bold"),
             bg="#8A2BE2",
@@ -80,14 +76,12 @@ class ProfileInterface(tk.Frame):
         )
         avatar_label.grid(row=0, column=0, padx=20, pady=10)
 
-        if isinstance(self.user, User):
-            username_display = self.user.username
-        else:
-            print("self.user is not a User instance:", self.user)
-            username_display = "Unknown User"
+        username_display = (
+            self.user.username if hasattr(self.user, "username") else "Unknown User"
+        )
 
         login_label = tk.Label(
-            profile_frame_inner,
+            profile_info_frame,
             text=username_display,
             font=("Arial", 20),
             fg="#4B0082",
@@ -95,16 +89,125 @@ class ProfileInterface(tk.Frame):
         )
         login_label.grid(row=0, column=1, padx=20, pady=10, sticky="w")
 
-        button_frame = tk.Frame(profile_frame, bg="#FFFFFF")
-        button_frame.pack(pady=10)
+        # Кнопка изменения профиля
+        edit_profile_button = tk.Button(
+            profile_info_frame,
+            text="Изменить данные профиля",
+            font=("Arial", 12),
+            bg="#8A2BE2",
+            fg="white",
+            relief="solid",
+            command=self.edit_profile,
+        )
+        edit_profile_button.grid(row=1, column=0, columnspan=2, pady=10)
 
-    @staticmethod
-    def on_mouse_wheel(event, canvas):
-        """Handle mouse wheel scroll."""
-        canvas.yview_scroll(-1 * (event.delta // 120), "units")
+        # Кнопки для действий
+        action_buttons_frame = tk.Frame(self.content_frame, bg="#FFFFFF")
+        action_buttons_frame.pack(pady=20)
+
+        create_publication_button = tk.Button(
+            action_buttons_frame,
+            text="Создать публикацию",
+            font=("Arial", 12),
+            bg="#4B0082",
+            fg="white",
+            relief="solid",
+            command=self.create_publication,
+        )
+        create_publication_button.grid(row=0, column=0, padx=10, pady=5)
+
+        published_posts_button = tk.Button(
+            action_buttons_frame,
+            text="Опубликованные посты",
+            font=("Arial", 12),
+            bg="#4B0082",
+            fg="white",
+            relief="solid",
+            command=self.view_published_posts,
+        )
+        published_posts_button.grid(row=0, column=1, padx=10, pady=5)
+
+        saved_posts_button = tk.Button(
+            action_buttons_frame,
+            text="Сохраненные посты",
+            font=("Arial", 12),
+            bg="#4B0082",
+            fg="white",
+            relief="solid",
+            command=self.view_saved_posts,
+        )
+        saved_posts_button.grid(row=0, column=2, padx=10, pady=5)
+
+    def on_mousewheel(self, event):
+        self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
 
     def logout(self):
         response = messagebox.askyesno("Выход", "Вы уверены, что хотите выйти?")
         if response:
-            self.clear_window()
             self.manager.logout_success()
+
+    def refresh_profile_data(self):
+        self.content_frame.destroy()
+        self.content_frame = tk.Frame(self, bg="#FFFFFF")
+        self.content_frame.grid(row=0, column=0, sticky="nsew")
+        self.create_widgets()
+
+    def edit_profile(self):
+        edit_window = tk.Toplevel(self)
+        edit_window.title("Изменить профиль")
+        edit_window.geometry("400x250")
+
+        tk.Label(edit_window, text="Новое имя пользователя:", font=("Arial", 12)).pack(
+            pady=10
+        )
+        username_entry = tk.Entry(edit_window, font=("Arial", 12))
+        username_entry.pack(pady=5)
+
+        tk.Label(edit_window, text="Новый пароль:", font=("Arial", 12)).pack(pady=10)
+        password_entry = tk.Entry(edit_window, font=("Arial", 12), show="*")
+        password_entry.pack(pady=5)
+
+        def submit_changes():
+            new_username = username_entry.get().strip()
+            new_password = password_entry.get().strip()
+
+            if not new_username and not new_password:
+                messagebox.showerror("Ошибка", "Заполните хотя бы одно поле!")
+                return
+
+            try:
+                updated_user = self.manager.user_crud.update_user(
+                    self.user.username, new_username=new_username, password=new_password
+                )
+                messagebox.showinfo("Успех", "Данные успешно изменены!")
+
+                # Обновляем текущего пользователя в менеджере
+                self.manager.current_user = updated_user
+                self.user = updated_user  # Локальное обновление
+                self.refresh_profile_data()  # Перезагружаем интерфейс профиля
+            except ValueError as e:
+                messagebox.showerror("Ошибка", str(e))
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Произошла ошибка: {e}")
+            finally:
+                edit_window.destroy()
+
+        tk.Button(
+            edit_window, text="Сохранить", font=("Arial", 12), command=submit_changes
+        ).pack(pady=20)
+
+    def create_publication(self):
+        messagebox.showinfo(
+            "Создание публикации", "Функция создания публикации в разработке."
+        )
+
+    def view_published_posts(self):
+        messagebox.showinfo(
+            "Опубликованные посты",
+            "Функция просмотра опубликованных постов в разработке.",
+        )
+
+    def view_saved_posts(self):
+        messagebox.showinfo(
+            "Сохраненные посты", "Функция просмотра сохраненных постов в разработке."
+        )
