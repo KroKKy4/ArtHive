@@ -5,12 +5,10 @@ from db.base import get_db, create_db_engine
 from db.db_crud import login_user, register_user
 
 
-class Interface:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("ArtHive")
-        self.root.geometry("400x360")
-        self.root.config(bg="#FFFFFF")
+class AuthInterface(tk.Frame):
+    def __init__(self, master, manager, main_window, user=None):
+        super().__init__(master)
+        self.manager = manager
 
         # Элементы интерфейса
         self.login_entry = None
@@ -25,13 +23,13 @@ class Interface:
         self.login_window()
 
     def clear_window(self):
-        for widget in self.root.winfo_children():
+        for widget in self.winfo_children():
             widget.destroy()
 
     def login_window(self):
         self.clear_window()
         tk.Label(
-            self.root,
+            self,
             text="Вход",
             font=("Arial", 18, "bold"),
             fg="#4B0082",
@@ -39,18 +37,18 @@ class Interface:
         ).pack(pady=20)
 
         tk.Label(
-            self.root, text="Логин:", font=("Arial", 12), fg="#4B0082", bg="#FFFFFF"
+            self, text="Логин:", font=("Arial", 12), fg="#4B0082", bg="#FFFFFF"
         ).pack()
         self.login_entry = tk.Entry(
-            self.root, font=("Arial", 12), bg="white", fg="black", bd=2, relief="solid"
+            self, font=("Arial", 12), bg="white", fg="black", bd=2, relief="solid"
         )
         self.login_entry.pack(pady=5)
 
         tk.Label(
-            self.root, text="Пароль:", font=("Arial", 12), fg="#4B0082", bg="#FFFFFF"
+            self, text="Пароль:", font=("Arial", 12), fg="#4B0082", bg="#FFFFFF"
         ).pack()
         self.password_entry = tk.Entry(
-            self.root,
+            self,
             font=("Arial", 12),
             bg="white",
             fg="black",
@@ -61,7 +59,7 @@ class Interface:
         self.password_entry.pack(pady=5)
 
         tk.Button(
-            self.root,
+            self,
             text="Войти",
             font=("Arial", 12),
             bg="#4B0082",
@@ -70,7 +68,7 @@ class Interface:
             command=self.login,
         ).pack(pady=10)
         tk.Button(
-            self.root,
+            self,
             text="Регистрация",
             font=("Arial", 12),
             bg="#8A2BE2",
@@ -87,40 +85,16 @@ class Interface:
         with get_db(engine) as db:
             try:
                 user = login_user(db, username, password)
-                messagebox.showinfo("Успех", f"Добро пожаловать, {user.username}!")
-                self.username = user.username
-                self.main_window()
+                messagebox.showinfo("Успех", f"Добро пожаловать, {username}!")
+                self.manager.login_success(user=user)
             except ValueError as e:
                 messagebox.showerror("Ошибка", str(e))
-            finally:
-                db.close()
-
-    def main_window(self):
-        self.clear_window()
-        self.root.geometry("900x500")
-
-        top_frame = tk.Frame(self.root, bg="#FFFFFF")
-        top_frame.pack(fill="x", pady=10)
-
-        search_label = tk.Label(
-            top_frame,
-            text="Поиск изображений:",
-            font=("Arial", 12),
-            fg="#4B0082",
-            bg="#FFFFFF",
-        )
-        search_label.pack(side="left", padx=10)
-
-        self.search_entry = tk.Entry(
-            top_frame, font=("Arial", 12), bg="white", fg="black", bd=2, relief="solid"
-        )
-        self.search_entry.pack(side="left", padx=10, pady=5)
 
     def registration_window(self):
         self.clear_window()
 
         tk.Label(
-            self.root,
+            self,
             text="Регистрация",
             font=("Arial", 18, "bold"),
             fg="#4B0082",
@@ -128,19 +102,19 @@ class Interface:
         ).pack(pady=20)
 
         tk.Label(
-            self.root, text="Логин:", font=("Arial", 12), fg="#4B0082", bg="#FFFFFF"
+            self, text="Логин:", font=("Arial", 12), fg="#4B0082", bg="#FFFFFF"
         ).pack()
         self.reg_login_entry = tk.Entry(
-            self.root, font=("Arial", 12), bg="white", fg="black", bd=2, relief="solid"
+            self, font=("Arial", 12), bg="white", fg="black", bd=2, relief="solid"
         )
         self.reg_login_entry.pack(pady=5)
         self.reg_login_entry.bind("<Return>", self.focus_next_field2)
 
         tk.Label(
-            self.root, text="Пароль:", font=("Arial", 12), fg="#4B0082", bg="#FFFFFF"
+            self, text="Пароль:", font=("Arial", 12), fg="#4B0082", bg="#FFFFFF"
         ).pack()
         self.reg_password_entry = tk.Entry(
-            self.root,
+            self,
             font=("Arial", 12),
             bg="white",
             fg="black",
@@ -152,14 +126,14 @@ class Interface:
         self.reg_password_entry.bind("<Return>", self.focus_next_field2)
 
         tk.Label(
-            self.root,
+            self,
             text="Подтвердите пароль:",
             font=("Arial", 12),
             fg="#4B0082",
             bg="#FFFFFF",
         ).pack()
         self.reg_confirm_password_entry = tk.Entry(
-            self.root,
+            self,
             font=("Arial", 12),
             bg="white",
             fg="black",
@@ -171,7 +145,7 @@ class Interface:
         self.reg_confirm_password_entry.bind("<Return>", self.register_action)
 
         tk.Button(
-            self.root,
+            self,
             text="Зарегистрироваться",
             font=("Arial", 12),
             bg="#4B0082",
@@ -180,7 +154,7 @@ class Interface:
             command=self.registration,
         ).pack(pady=10)
         tk.Button(
-            self.root,
+            self,
             text="Назад",
             font=("Arial", 12),
             bg="#8A2BE2",
