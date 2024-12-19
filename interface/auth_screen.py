@@ -2,13 +2,18 @@ import tkinter as tk
 from tkinter import messagebox
 
 from db.base import get_db, create_db_engine
-from crud.user_crud import login_user, register_user
+from crud.auth_crud import AuthCRUD
 
 
 class AuthInterface(tk.Frame):
     def __init__(self, master, manager, main_window, user=None):
         super().__init__(master)
         self.manager = manager
+
+        # Инициализация AuthCRUD
+        engine = create_db_engine()
+        with get_db(engine) as db_session:
+            self.auth_crud = AuthCRUD(db_session)
 
         # Элементы интерфейса
         self.login_entry = None
@@ -81,14 +86,12 @@ class AuthInterface(tk.Frame):
         username = self.login_entry.get()
         password = self.password_entry.get()
 
-        engine = create_db_engine()
-        with get_db(engine) as db:
-            try:
-                user = login_user(db, username, password)
-                messagebox.showinfo("Успех", f"Добро пожаловать, {username}!")
-                self.manager.login_success(user=user)
-            except ValueError as e:
-                messagebox.showerror("Ошибка", str(e))
+        try:
+            user = self.auth_crud.login_user(username, password)
+            messagebox.showinfo("Успех", f"Добро пожаловать, {username}!")
+            self.manager.login_success(user=user)
+        except ValueError as e:
+            messagebox.showerror("Ошибка", str(e))
 
     def registration_window(self):
         self.clear_window()
@@ -183,9 +186,7 @@ class AuthInterface(tk.Frame):
             )
             return
 
-        engine = create_db_engine()
-        with get_db(engine) as db:
-            message = register_user(db, username, password)
+        message = self.auth_crud.register_user(username, password)
 
         if message == "Регистрация успешна! Теперь можно войти.":
             messagebox.showinfo("Успех", message)

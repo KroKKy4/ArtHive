@@ -1,8 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
 
-from db.models import User
-
 
 class MainInterface(tk.Frame):
     def __init__(self, master, manager, user, *args, **kwargs):
