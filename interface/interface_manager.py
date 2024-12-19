@@ -12,7 +12,7 @@ from interface.main_screen import MainInterface
 class InterfaceManager:
     def __init__(self, master, db: Session):
         self.user_crud = UserCRUD(db)
-        self.image_crud = PostsCRUD(db)  # Вот здесь мы создаем экземпляр постов CRUD
+        self.posts_crud = PostsCRUD(db)  # Вот здесь мы создаем экземпляр постов CRUD
         self.master = master
         self.current_interface = None
         self.current_user = None

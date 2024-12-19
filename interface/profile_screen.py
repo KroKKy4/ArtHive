@@ -269,7 +269,7 @@ class ProfileInterface(tk.Frame):
                 return
 
             try:
-                new_image = self.manager.image_crud.create_image_with_tags(
+                new_image = self.manager.posts_crud.create_image_with_tags(
                     user_id=self.user.id,
                     image_data=image_data,
                     description=description,
@@ -300,7 +300,7 @@ class ProfileInterface(tk.Frame):
         posts_window.maxsize(1200, 800)
 
         # Получаем посты пользователя
-        user_posts = self.manager.image_crud.get_user_images(self.user.id)
+        user_posts = self.manager.posts_crud.get_user_images(self.user.id)
 
         if not user_posts:
             tk.Label(
@@ -395,8 +395,106 @@ class ProfileInterface(tk.Frame):
         )
 
     def view_saved_posts(self):
-        messagebox.showinfo(
-            "Сохраненные посты", "Функция просмотра сохраненных постов в разработке."
+        # Создаём новое окно для просмотра сохранённых постов
+        saved_window = tk.Toplevel(self)
+        saved_window.title("Сохраненные посты")
+
+        # Устанавливаем минимальный и максимальный размер окна (по аналогии с view_published_posts)
+        saved_window.minsize(500, 500)
+        saved_window.maxsize(1200, 800)
+
+        # Получаем сохранённые посты пользователя
+        saved_posts = self.manager.posts_crud.get_saved_posts_for_user(self.user.id)
+
+        if not saved_posts:
+            tk.Label(
+                saved_window,
+                text="У вас нет сохранённых постов.",
+                font=("Arial", 12),
+            ).pack(pady=20)
+            return
+
+        container = tk.Frame(saved_window)
+        container.pack(fill="both", expand=True)
+
+        canvas = tk.Canvas(container)
+        canvas.pack(side="left", fill="both", expand=True)
+
+        scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        scrollbar.pack(side="right", fill="y")
+
+        canvas.configure(yscrollcommand=scrollbar.set)
+        posts_frame = tk.Frame(canvas)
+        canvas.create_window((0, 0), window=posts_frame, anchor="nw")
+
+        def on_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        posts_frame.bind("<Configure>", on_configure)
+
+        # Количество столбцов (по 2 поста в строку)
+        columns = 2
+
+        # Фиксированные размеры для фрейма поста
+        POST_WIDTH = 250
+        POST_HEIGHT = 350
+
+        for index, post in enumerate(saved_posts):
+            row = index // columns
+            col = index % columns
+
+            post_frame = tk.Frame(posts_frame, bd=2, relief="groove")
+            post_frame.pack_propagate(False)
+            post_frame.config(width=POST_WIDTH, height=POST_HEIGHT)
+            post_frame.grid(row=row, column=col, padx=5, pady=5, sticky="n")
+
+            date_str = (
+                post.created_at.strftime("%Y-%m-%d %H:%M")
+                if post.created_at
+                else "Без даты"
+            )
+            tk.Label(
+                post_frame, text=f"Пост №{index + 1}", font=("Arial", 14, "bold")
+            ).pack(anchor="w", pady=(5, 0))
+            tk.Label(
+                post_frame, text=f"Дата: {date_str}", font=("Arial", 10, "italic")
+            ).pack(anchor="w", pady=(0, 5))
+
+            desc = post.description if post.description else "Без описания"
+            tk.Label(
+                post_frame,
+                text=desc,
+                font=("Arial", 12),
+                wraplength=200,
+                justify="left",
+            ).pack(anchor="w", pady=(0, 5))
+
+            tag_names = [it.tag.name for it in post.tags] if post.tags else []
+            if tag_names:
+                tk.Label(
+                    post_frame,
+                    text="Теги: " + ", ".join(tag_names),
+                    font=("Arial", 10, "italic"),
+                ).pack(anchor="w", pady=(0, 5))
+
+            if post.image_data:
+                try:
+                    img_data = io.BytesIO(post.image_data)
+                    img = Image.open(img_data)
+                    img = img.resize((150, 150), Image.Resampling.LANCZOS)
+                    photo = ImageTk.PhotoImage(img)
+                    img_label = tk.Label(post_frame, image=photo)  # type: ignore
+                    img_label.image = photo  # сохраняем ссылку
+                    img_label.pack(anchor="w", pady=(5, 5))
+                except Exception as e:
+                    tk.Label(
+                        post_frame,
+                        text=f"Ошибка при загрузке изображения: {e}",
+                        fg="red",
+                    ).pack(anchor="w")
+
+        tk.Button(saved_window, text="Закрыть", command=saved_window.destroy).pack(
+            pady=10
         )
 
     def load_avatar(self, avatar_bytes):

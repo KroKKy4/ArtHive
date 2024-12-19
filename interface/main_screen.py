@@ -120,7 +120,6 @@ class MainInterface(tk.Frame):
             ).pack(pady=20)
             return
 
-        # Настраиваем параметры сетки
         columns = 4
         POST_WIDTH = 250
         POST_HEIGHT = 300
@@ -175,18 +174,17 @@ class MainInterface(tk.Frame):
             view_button.pack(anchor="center", pady=5)
 
     def show_all_posts(self):
-        posts = self.manager.image_crud.get_all_images()
+        posts = self.manager.posts_crud.get_all_images()
         self.render_posts(posts)
 
     def show_filtered_posts(self, posts):
         self.render_posts(posts)
 
     def show_post_details(self, post):
-        # Создаём новое окно с деталями поста
         detail_window = tk.Toplevel(self)
         detail_window.title("Детали поста")
-        detail_window.geometry("800x750")  # Устанавливаем фиксированный размер
-        detail_window.resizable(False, False)  # Отключаем изменение размеров окна
+        detail_window.geometry("800x750")
+        detail_window.resizable(False, False)
 
         if post.image_data:
             try:
@@ -279,6 +277,25 @@ class MainInterface(tk.Frame):
         )
         download_button.pack(pady=(10, 20))
 
+        def save_post():
+            try:
+                # Предполагается, что данный метод будет реализован в manager.posts_crud
+                self.manager.posts_crud.save_post_for_user(self.user.id, post.id)
+                messagebox.showinfo("Успех", "Пост успешно сохранён!")
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Не удалось сохранить пост: {e}")
+
+        # Кнопка "Сохранить пост"
+        save_button = tk.Button(
+            detail_window,
+            text="Сохранить пост",
+            bg="#4B0082",
+            fg="white",
+            relief="solid",
+            command=save_post,
+        )
+        save_button.pack(pady=(0, 20))
+
         close_button = tk.Button(
             detail_window, text="Закрыть", command=detail_window.destroy
         )
@@ -292,7 +309,7 @@ class MainInterface(tk.Frame):
             return
 
         try:
-            found_posts = self.manager.image_crud.search_posts_by_tags(search_query)
+            found_posts = self.manager.posts_crud.search_posts_by_tags(search_query)
             if not found_posts:
                 messagebox.showinfo("Поиск", "Постов с таким хэштегом не найдено.")
                 return

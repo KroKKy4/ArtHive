@@ -4,6 +4,8 @@ from contextlib import contextmanager
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import sessionmaker, Session
 
+from db.models import Base
+
 DATABASE_URL = "sqlite:///pinterest.db"
 
 
@@ -22,3 +24,11 @@ def get_db(engine: Engine) -> Session:
         yield db  # Возвращаем сессию
     finally:
         db.close()
+
+
+def create_tables(engine):
+    Base.metadata.create_all(engine)
+
+
+def delete_tables(engine):
+    Base.metadata.drop_all(engine)

@@ -1,14 +1,13 @@
 import tkinter as tk
 
-from db.base import create_db_engine
-from db.models import create_tables
-from db.base import get_db
+from db.base import create_db_engine, get_db, create_tables, delete_tables
 from interface.interface_manager import InterfaceManager
 from interface.auth_screen import AuthInterface
 
 if __name__ == "__main__":
     engine = create_db_engine()
-    # create_tables(engine) #  Использовать только при первом запуске программы
+    # create_tables(engine)  #  Использовать только при первом запуске программы
+    # delete_tables(engine)  #  Использовать для удаления всех таблиц из базы данных
     root = tk.Tk()
     root.title("ArtHive")
     root.geometry("1024x700+500+400")
