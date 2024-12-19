@@ -1,9 +1,10 @@
 import tkinter as tk
-from tkinter import ttk
-
 from sqlalchemy.orm import Session
 
-from crud.profile_crud import UserCRUD
+from crud.user_crud import UserCRUD
+from crud.posts_crud import (
+    PostsCRUD,
+)
 from interface.auth_screen import AuthInterface
 from interface.main_screen import MainInterface
 
@@ -11,6 +12,7 @@ from interface.main_screen import MainInterface
 class InterfaceManager:
     def __init__(self, master, db: Session):
         self.user_crud = UserCRUD(db)
+        self.image_crud = PostsCRUD(db)  # Вот здесь мы создаем экземпляр постов CRUD
         self.master = master
         self.current_interface = None
         self.current_user = None

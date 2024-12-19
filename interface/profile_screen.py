@@ -1,7 +1,8 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog, filedialog
+from tkinter import messagebox, filedialog
 from PIL import Image, ImageTk
 import io
+import datetime
 
 
 class ProfileInterface(tk.Frame):
@@ -26,7 +27,7 @@ class ProfileInterface(tk.Frame):
 
     def create_top_frame(self):
         top_frame = tk.Frame(self.content_frame, bg="#FFFFFF")
-        top_frame.pack(fill="x", side="top")  # Растягиваем по горизонтали
+        top_frame.pack(fill="x", side="top")
 
         # Фрейм для кнопки "Назад"
         left_frame = tk.Frame(top_frame, bg="#FFFFFF")
@@ -77,19 +78,6 @@ class ProfileInterface(tk.Frame):
         )
         avatar_label.grid(row=0, column=0, padx=20, pady=10)
 
-        # Кнопка для загрузки нового аватара
-        upload_button = tk.Button(
-            profile_info_frame,
-            text="Загрузить аватар",
-            font=("Arial", 12),
-            bg="#8A2BE2",
-            fg="white",
-            relief="solid",
-            command=self.upload_avatar,
-        )
-        upload_button.grid(row=1, column=0, padx=10, pady=5)
-
-        # Отображение имени пользователя
         username_display = (
             self.user.username if hasattr(self.user, "username") else "Unknown User"
         )
@@ -125,7 +113,7 @@ class ProfileInterface(tk.Frame):
             bg="#4B0082",
             fg="white",
             relief="solid",
-            command=self.create_publication,
+            command=self.create_publication_window,  # изменили команду
         )
         create_publication_button.grid(row=0, column=0, padx=10, pady=5)
 
@@ -194,10 +182,9 @@ class ProfileInterface(tk.Frame):
                 )
                 messagebox.showinfo("Успех", "Данные успешно изменены!")
 
-                # Обновляем текущего пользователя в менеджере
                 self.manager.current_user = updated_user
-                self.user = updated_user  # Локальное обновление
-                self.refresh_profile_data()  # Перезагружаем интерфейс профиля
+                self.user = updated_user
+                self.refresh_profile_data()
             except ValueError as e:
                 messagebox.showerror("Ошибка", str(e))
             except Exception as e:
@@ -209,10 +196,87 @@ class ProfileInterface(tk.Frame):
             edit_window, text="Сохранить", font=("Arial", 12), command=submit_changes
         ).pack(pady=20)
 
-    def create_publication(self):
-        messagebox.showinfo(
-            "Создание публикации", "Функция создания публикации в разработке."
+    def create_publication_window(self):
+        post_window = tk.Toplevel(self)
+        post_window.title("Создать публикацию")
+        post_window.geometry("500x400")
+
+        tk.Label(post_window, text="Изображение:", font=("Arial", 12)).pack(pady=5)
+        image_frame = tk.Frame(post_window)
+        image_frame.pack(pady=5)
+
+        image_path_var = tk.StringVar()
+
+        def choose_image():
+            filename = filedialog.askopenfilename(
+                title="Выберите изображение для публикации",
+                filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.gif")],
+            )
+            if filename:
+                image_path_var.set(filename)
+
+        tk.Button(image_frame, text="Выбрать изображение", command=choose_image).pack(
+            side="left", padx=5
         )
+        image_path_label = tk.Label(
+            image_frame, textvariable=image_path_var, font=("Arial", 10)
+        )
+        image_path_label.pack(side="left", padx=5)
+
+        tk.Label(post_window, text="Описание:", font=("Arial", 12)).pack(pady=5)
+        description_text = tk.Text(post_window, width=50, height=5, font=("Arial", 12))
+        description_text.pack(pady=5)
+
+        tk.Label(
+            post_window, text="Теги (до 5, разделите запятой):", font=("Arial", 12)
+        ).pack(pady=5)
+        tags_entry = tk.Entry(post_window, font=("Arial", 12))
+        tags_entry.pack(pady=5)
+
+        def create_post():
+            img_path = image_path_var.get().strip()
+            description = description_text.get("1.0", tk.END).strip()
+            tags_str = tags_entry.get().strip()
+
+            if not img_path:
+                messagebox.showerror("Ошибка", "Изображение не выбрано!")
+                return
+
+            try:
+                with open(img_path, "rb") as f:
+                    image_data = f.read()
+            except Exception as e:
+                messagebox.showerror(
+                    "Ошибка", f"Не удалось прочитать файл изображения: {e}"
+                )
+                return
+
+            tags = [t.strip() for t in tags_str.split(",") if t.strip()]
+            if len(tags) > 5:
+                messagebox.showerror("Ошибка", "Можно указать не более 5 тегов.")
+                return
+
+            try:
+                new_image = self.manager.image_crud.create_image_with_tags(
+                    user_id=self.user.id,
+                    image_data=image_data,
+                    description=description,
+                    tags=tags,
+                    created_at=datetime.datetime.utcnow(),
+                )
+                messagebox.showinfo("Успех", "Публикация успешно создана!")
+                post_window.destroy()
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Не удалось создать публикацию: {e}")
+
+        tk.Button(
+            post_window,
+            text="Создать публикацию",
+            bg="#4B0082",
+            fg="white",
+            font=("Arial", 12),
+            command=create_post,
+        ).pack(pady=20)
 
     def view_published_posts(self):
         messagebox.showinfo(
@@ -227,32 +291,10 @@ class ProfileInterface(tk.Frame):
 
     def load_avatar(self, avatar_bytes):
         if avatar_bytes:
-            # Если аватар есть, конвертируем байты в изображение
             image_data = io.BytesIO(avatar_bytes)
             img = Image.open(image_data)
-            # Опционально можем изменить размер аватара, например до 100x100
             img = img.resize((100, 100), Image.Resampling.LANCZOS)
             return ImageTk.PhotoImage(img)
         else:
             placeholder = Image.new("RGB", (100, 100), color="#8A2BE2")
             return ImageTk.PhotoImage(placeholder)
-
-    def upload_avatar(self):
-        filename = filedialog.askopenfilename(
-            title="Выберите изображение для аватара",
-            filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.gif")],
-        )
-        if filename:
-            try:
-                with open(filename, "rb") as f:
-                    avatar_data = f.read()
-                # Обновляем пользователя
-                updated_user = self.manager.user_crud.update_user(
-                    self.user.username, avatar=avatar_data
-                )
-                self.manager.current_user = updated_user
-                self.user = updated_user
-                messagebox.showinfo("Успех", "Аватар успешно обновлён!")
-                self.refresh_profile_data()
-            except Exception as e:
-                messagebox.showerror("Ошибка", f"Не удалось загрузить аватар: {e}")
