@@ -16,7 +16,11 @@ class UserCRUD:
         return self.db.query(User).filter(User.username == username).first()
 
     def update_user(
-        self, username: str, new_username: str = None, password: str = None
+        self,
+        username: str,
+        new_username: str = None,
+        password: str = None,
+        avatar: bytes = None,
     ):
         user = self.get_user_by_username(username)
         if user is None:
@@ -36,6 +40,10 @@ class UserCRUD:
             user.password = bcrypt.hashpw(
                 password.encode("utf-8"), bcrypt.gensalt()
             ).decode("utf-8")
+
+        # Обновление аватара
+        if avatar is not None:
+            user.avatar = avatar
 
         self.db.commit()
         self.db.refresh(user)

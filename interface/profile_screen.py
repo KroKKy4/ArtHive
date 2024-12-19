@@ -1,10 +1,13 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import messagebox, simpledialog, filedialog
+from PIL import Image, ImageTk
+import io
 
 
 class ProfileInterface(tk.Frame):
     def __init__(self, master, manager, user, main_window_callback, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
+        self.avatar_image = None
         self.manager = manager
         self.user = user or self.manager.current_user
         self.main_window_callback = main_window_callback
@@ -63,23 +66,33 @@ class ProfileInterface(tk.Frame):
         profile_info_frame = tk.Frame(self.content_frame, bg="#FFFFFF")
         profile_info_frame.pack(pady=20, expand=True)
 
+        self.avatar_image = self.load_avatar(self.user.avatar)
+
+        # Создаем Label для отображения аватара или заглушки
         avatar_label = tk.Label(
             profile_info_frame,
-            text="Аватар",
-            font=("Arial", 12, "bold"),
-            bg="#8A2BE2",
-            fg="white",
-            width=8,
-            height=4,
+            image=self.avatar_image,  # type: ignore
+            bg="#FFFFFF",
             relief="solid",
-            anchor="center",
         )
         avatar_label.grid(row=0, column=0, padx=20, pady=10)
 
+        # Кнопка для загрузки нового аватара
+        upload_button = tk.Button(
+            profile_info_frame,
+            text="Загрузить аватар",
+            font=("Arial", 12),
+            bg="#8A2BE2",
+            fg="white",
+            relief="solid",
+            command=self.upload_avatar,
+        )
+        upload_button.grid(row=1, column=0, padx=10, pady=5)
+
+        # Отображение имени пользователя
         username_display = (
             self.user.username if hasattr(self.user, "username") else "Unknown User"
         )
-
         login_label = tk.Label(
             profile_info_frame,
             text=username_display,
@@ -99,7 +112,7 @@ class ProfileInterface(tk.Frame):
             relief="solid",
             command=self.edit_profile,
         )
-        edit_profile_button.grid(row=1, column=0, columnspan=2, pady=10)
+        edit_profile_button.grid(row=1, column=1, padx=20, pady=10)
 
         # Кнопки для действий
         action_buttons_frame = tk.Frame(self.content_frame, bg="#FFFFFF")
@@ -211,3 +224,35 @@ class ProfileInterface(tk.Frame):
         messagebox.showinfo(
             "Сохраненные посты", "Функция просмотра сохраненных постов в разработке."
         )
+
+    def load_avatar(self, avatar_bytes):
+        if avatar_bytes:
+            # Если аватар есть, конвертируем байты в изображение
+            image_data = io.BytesIO(avatar_bytes)
+            img = Image.open(image_data)
+            # Опционально можем изменить размер аватара, например до 100x100
+            img = img.resize((100, 100), Image.Resampling.LANCZOS)
+            return ImageTk.PhotoImage(img)
+        else:
+            placeholder = Image.new("RGB", (100, 100), color="#8A2BE2")
+            return ImageTk.PhotoImage(placeholder)
+
+    def upload_avatar(self):
+        filename = filedialog.askopenfilename(
+            title="Выберите изображение для аватара",
+            filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.gif")],
+        )
+        if filename:
+            try:
+                with open(filename, "rb") as f:
+                    avatar_data = f.read()
+                # Обновляем пользователя
+                updated_user = self.manager.user_crud.update_user(
+                    self.user.username, avatar=avatar_data
+                )
+                self.manager.current_user = updated_user
+                self.user = updated_user
+                messagebox.showinfo("Успех", "Аватар успешно обновлён!")
+                self.refresh_profile_data()
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Не удалось загрузить аватар: {e}")
