@@ -64,7 +64,7 @@ class PostsCRUD:
 
         Аргументы:
             image (Image): Объект изображения, к которому нужно добавить теги.
-            tags (List[str]): Список названий тегов.
+            Tags (List[str]): Список названий тегов.
         """
         normalized_tags = [t.strip() for t in tags if t.strip()]
         for tag_name in normalized_tags:
@@ -107,3 +107,36 @@ class PostsCRUD:
         if not exists:
             image_tag = ImageTag(image_id=image.id, tag_id=tag.id)
             self.db.add(image_tag)
+
+    def get_user_images(self, user_id: int) -> List[Image]:
+        """
+        Возвращает список постов пользователя, отсортированных от нового к старому.
+        """
+        images = (
+            self.db.query(Image)
+            .filter(Image.user_id == user_id)
+            .order_by(Image.created_at.desc())
+            .all()
+        )
+        return images  # type: ignore
+
+    def get_all_images(self) -> List[Image]:
+        """
+        Возвращает все посты, отсортированные от нового к старому.
+        """
+        images = self.db.query(Image).order_by(Image.created_at.desc()).all()
+        return images  # type: ignore
+
+    def search_posts_by_tags(self, tag_name: str):
+        """
+        Возвращает все посты, связанные с указанным хэштегом.
+        """
+        posts = (
+            self.db.query(Image)
+            .join(ImageTag, Image.id == ImageTag.image_id)
+            .join(Tag, ImageTag.tag_id == Tag.id)
+            .filter(Tag.name.ilike(f"%{tag_name}%"))
+            .order_by(Image.created_at.desc())
+            .all()
+        )
+        return posts

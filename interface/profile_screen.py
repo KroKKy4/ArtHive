@@ -78,6 +78,18 @@ class ProfileInterface(tk.Frame):
         )
         avatar_label.grid(row=0, column=0, padx=20, pady=10)
 
+        # Кнопка для загрузки аватарки
+        upload_avatar_button = tk.Button(
+            profile_info_frame,
+            text="Загрузить аватар",
+            font=("Arial", 12),
+            bg="#8A2BE2",
+            fg="white",
+            relief="solid",
+            command=self.upload_avatar,  # Добавляем метод для загрузки аватарки
+        )
+        upload_avatar_button.grid(row=1, column=0, padx=20, pady=10)
+
         username_display = (
             self.user.username if hasattr(self.user, "username") else "Unknown User"
         )
@@ -113,7 +125,7 @@ class ProfileInterface(tk.Frame):
             bg="#4B0082",
             fg="white",
             relief="solid",
-            command=self.create_publication_window,  # изменили команду
+            command=self.create_publication_window,
         )
         create_publication_button.grid(row=0, column=0, padx=10, pady=5)
 
@@ -279,9 +291,107 @@ class ProfileInterface(tk.Frame):
         ).pack(pady=20)
 
     def view_published_posts(self):
-        messagebox.showinfo(
-            "Опубликованные посты",
-            "Функция просмотра опубликованных постов в разработке.",
+        # Создаем новое окно для просмотра опубликованных постов
+        posts_window = tk.Toplevel(self)
+        posts_window.title("Опубликованные посты")
+
+        # Устанавливаем минимальный и максимальный размер окна
+        posts_window.minsize(500, 500)
+        posts_window.maxsize(1200, 800)
+
+        # Получаем посты пользователя
+        user_posts = self.manager.image_crud.get_user_images(self.user.id)
+
+        if not user_posts:
+            tk.Label(
+                posts_window,
+                text="У вас еще нет опубликованных постов.",
+                font=("Arial", 12),
+            ).pack(pady=20)
+            return
+
+        container = tk.Frame(posts_window)
+        container.pack(fill="both", expand=True)
+
+        canvas = tk.Canvas(container)
+        canvas.pack(side="left", fill="both", expand=True)
+
+        scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        scrollbar.pack(side="right", fill="y")
+
+        canvas.configure(yscrollcommand=scrollbar.set)
+        posts_frame = tk.Frame(canvas)
+        canvas.create_window((0, 0), window=posts_frame, anchor="nw")
+
+        def on_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        posts_frame.bind("<Configure>", on_configure)
+
+        # Количество столбцов (по 2 поста в строку)
+        columns = 2
+
+        # Фиксированные размеры для фрейма поста
+        POST_WIDTH = 250
+        POST_HEIGHT = 350
+
+        for index, post in enumerate(user_posts):
+            row = index // columns
+            col = index % columns
+
+            post_frame = tk.Frame(posts_frame, bd=2, relief="groove")
+            # Отключаем автоизменение размеров и задаём фиксированные размеры
+            post_frame.pack_propagate(False)
+            post_frame.config(width=POST_WIDTH, height=POST_HEIGHT)
+            post_frame.grid(row=row, column=col, padx=5, pady=5, sticky="n")
+
+            date_str = (
+                post.created_at.strftime("%Y-%m-%d %H:%M")
+                if post.created_at
+                else "Без даты"
+            )
+            tk.Label(
+                post_frame, text=f"Пост №{index + 1}", font=("Arial", 14, "bold")
+            ).pack(anchor="w", pady=(5, 0))
+            tk.Label(
+                post_frame, text=f"Дата: {date_str}", font=("Arial", 10, "italic")
+            ).pack(anchor="w", pady=(0, 5))
+
+            desc = post.description if post.description else "Без описания"
+            tk.Label(
+                post_frame,
+                text=desc,
+                font=("Arial", 12),
+                wraplength=200,
+                justify="left",
+            ).pack(anchor="w", pady=(0, 5))
+
+            tag_names = [it.tag.name for it in post.tags] if post.tags else []
+            if tag_names:
+                tk.Label(
+                    post_frame,
+                    text="Теги: " + ", ".join(tag_names),
+                    font=("Arial", 10, "italic"),
+                ).pack(anchor="w", pady=(0, 5))
+
+            if post.image_data:
+                try:
+                    img_data = io.BytesIO(post.image_data)
+                    img = Image.open(img_data)
+                    img = img.resize((150, 150), Image.Resampling.LANCZOS)
+                    photo = ImageTk.PhotoImage(img)
+                    img_label = tk.Label(post_frame, image=photo)  # type: ignore
+                    img_label.image = photo  # сохраняем ссылку
+                    img_label.pack(anchor="w", pady=(5, 5))
+                except Exception as e:
+                    tk.Label(
+                        post_frame,
+                        text=f"Ошибка при загрузке изображения: {e}",
+                        fg="red",
+                    ).pack(anchor="w")
+
+        tk.Button(posts_window, text="Закрыть", command=posts_window.destroy).pack(
+            pady=10
         )
 
     def view_saved_posts(self):
@@ -298,3 +408,23 @@ class ProfileInterface(tk.Frame):
         else:
             placeholder = Image.new("RGB", (100, 100), color="#8A2BE2")
             return ImageTk.PhotoImage(placeholder)
+
+    def upload_avatar(self):
+        filename = filedialog.askopenfilename(
+            title="Выберите изображение для аватара",
+            filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.gif")],
+        )
+        if filename:
+            try:
+                with open(filename, "rb") as f:
+                    avatar_data = f.read()
+                # Обновляем пользователя
+                updated_user = self.manager.user_crud.update_user(
+                    self.user.username, avatar=avatar_data
+                )
+                self.manager.current_user = updated_user
+                self.user = updated_user
+                messagebox.showinfo("Успех", "Аватар успешно обновлён!")
+                self.refresh_profile_data()
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Не удалось загрузить аватар: {e}")

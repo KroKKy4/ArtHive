@@ -11,7 +11,7 @@ if __name__ == "__main__":
     # create_tables(engine) #  Использовать только при первом запуске программы
     root = tk.Tk()
     root.title("ArtHive")
-    root.geometry("1024x600+500+400")
+    root.geometry("1024x700+500+400")
     root.minsize(400, 400)
     root.config(bg="#FFFFFF")
     with get_db(engine) as session:
