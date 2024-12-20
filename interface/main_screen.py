@@ -73,10 +73,13 @@ class MainInterface(tk.Frame):
         self.show_all_posts()
         self.pack(fill=tk.BOTH, expand=True)
 
+        # Устанавливаем хоткеи
+        self.setup_hotkeys()
+
     def render_posts(self, posts):
         # Очищаем все элементы под строкой поиска
         for widget in self.winfo_children():
-            if widget not in (self.search_entry.master,):
+            if widget != self.search_entry.master:
                 widget.destroy()
 
         posts_container = tk.Frame(self)
@@ -95,24 +98,25 @@ class MainInterface(tk.Frame):
         canvas.create_window((0, 0), window=all_posts_frame, anchor="nw")
 
         def on_configure(event):
+            # Установка границ прокрутки
             canvas.configure(scrollregion=canvas.bbox("all"))
 
         all_posts_frame.bind("<Configure>", on_configure)
 
         # Добавляем поддержку прокрутки колесиком мыши
         def _on_mousewheel(event):
-            # Для Windows
-            if event.num == 4 or event.delta > 0:
-                canvas.yview_scroll(-1, "units")
-            elif event.num == 5 or event.delta < 0:
-                canvas.yview_scroll(1, "units")
+            if event.delta:  # Windows и macOS
+                canvas.yview_scroll(-1 * (event.delta // 120), "units")
+            elif event.num in (4, 5):  # Linux
+                canvas.yview_scroll(-1 if event.num == 4 else 1, "units")
 
-        # Привязки для разных систем
-        # Windows:
-        canvas.bind("<MouseWheel>", _on_mousewheel)
-        # Linux (обычно требуется):
-        canvas.bind("<Button-4>", _on_mousewheel)
-        canvas.bind("<Button-5>", _on_mousewheel)
+        # Привязки событий только для области canvas
+        canvas.bind("<Enter>", lambda _: canvas.bind("<MouseWheel>", _on_mousewheel))
+        canvas.bind("<Leave>", lambda _: canvas.unbind("<MouseWheel>"))
+        canvas.bind("<Enter>", lambda _: canvas.bind("<Button-4>", _on_mousewheel))
+        canvas.bind("<Enter>", lambda _: canvas.bind("<Button-5>", _on_mousewheel))
+        canvas.bind("<Leave>", lambda _: canvas.unbind("<Button-4>"))
+        canvas.bind("<Leave>", lambda _: canvas.unbind("<Button-5>"))
 
         if not posts:
             tk.Label(
@@ -323,3 +327,17 @@ class MainInterface(tk.Frame):
     def clear_window(self):
         for widget in self.winfo_children():
             widget.destroy()
+
+    def setup_hotkeys(self):
+        # Переход в профиль по Ctrl+P
+        self.master.bind_all("<Control-p>", lambda event: self.show_profile())
+        # Поиск постов по Ctrl+F
+        self.master.bind_all("<Control-f>", lambda event: self.focus_search())
+        # Показ всех постов по Ctrl+A
+        self.master.bind_all("<Control-a>", lambda event: self.show_all_posts())
+        # Закрытие приложения по Ctrl+Q
+        self.master.bind_all("<Control-q>", lambda event: self.master.destroy())
+
+    def focus_search(self):
+        if self.search_entry:
+            self.search_entry.focus_set()
