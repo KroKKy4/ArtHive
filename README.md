@@ -5,7 +5,7 @@
 - В терминале вводим python -m venv venv
 3) Устанавливаем зависимости в виртуальное окружение:
 ```chatinput
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 4) Заходим в файл main.py
 5) Удаляем комментарий со строчки ```create_tables(engine)``` - это создаст нашу базу данных при запуске
