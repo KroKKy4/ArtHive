@@ -5,6 +5,12 @@ import io
 from PIL import Image, ImageTk
 from tkinter import Tk
 
+from const import (
+    MAIN_SCREEN_POST_WIDTH,
+    MAIN_SCREEN_POST_HEIGHT,
+    MAIN_SCREEN_POST_COUNT,
+)
+
 
 class MainInterface(tk.Frame):
     def __init__(self, master: Tk, manager, user, *args, **kwargs):
@@ -124,9 +130,9 @@ class MainInterface(tk.Frame):
             ).pack(pady=20)
             return
 
-        columns = 4
-        POST_WIDTH = 250
-        POST_HEIGHT = 300
+        columns = MAIN_SCREEN_POST_COUNT
+        post_width = MAIN_SCREEN_POST_WIDTH
+        post_height = MAIN_SCREEN_POST_HEIGHT
 
         total_columns = columns + 2
         all_posts_frame.grid_columnconfigure(0, weight=1)
@@ -139,7 +145,7 @@ class MainInterface(tk.Frame):
 
             post_frame = tk.Frame(all_posts_frame, bd=2, relief="groove")
             post_frame.pack_propagate(False)
-            post_frame.config(width=POST_WIDTH, height=POST_HEIGHT)
+            post_frame.config(width=post_width, height=post_height)
             post_frame.grid(row=row, column=col, padx=5, pady=5, sticky="n")
 
             if post.image_data:
@@ -283,7 +289,6 @@ class MainInterface(tk.Frame):
 
         def save_post():
             try:
-                # Предполагается, что данный метод будет реализован в manager.posts_crud
                 self.manager.posts_crud.save_post_for_user(self.user.id, post.id)
                 messagebox.showinfo("Успех", "Пост успешно сохранён!")
             except Exception as e:

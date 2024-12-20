@@ -7,7 +7,7 @@ from db.models import (
     Tag,
     ImageTag,
     User,
-    SavedPost,  # Импортируем новую модель
+    SavedPost,
 )
 
 
@@ -116,7 +116,6 @@ class PostsCRUD:
 
     def get_saved_posts_for_user(self, user_id: int) -> List[Image]:
         # Получаем список постов, сохранённых пользователем
-        # Можно сделать через подзапрос или простой join
         posts = (
             self.db.query(Image)
             .join(SavedPost, Image.id == SavedPost.image_id)  # type: ignore

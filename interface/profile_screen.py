@@ -4,6 +4,12 @@ from PIL import Image, ImageTk
 import io
 import datetime
 
+from const import (
+    PROFILE_SCREEN_POST_COUNT,
+    PROFILE_SCREEN_POST_WIDTH,
+    PROFILE_SCREEN_POST_HEIGHT,
+)
+
 
 class ProfileInterface(tk.Frame):
     def __init__(self, master, manager, user, main_window_callback, *args, **kwargs):
@@ -322,9 +328,9 @@ class ProfileInterface(tk.Frame):
 
         posts_frame.bind("<Configure>", on_configure)
 
-        columns = 2
-        POST_WIDTH = 250
-        POST_HEIGHT = 350
+        columns = PROFILE_SCREEN_POST_COUNT
+        post_width = PROFILE_SCREEN_POST_WIDTH
+        post_height = PROFILE_SCREEN_POST_HEIGHT
 
         for index, post in enumerate(posts):
             row = index // columns
@@ -332,7 +338,7 @@ class ProfileInterface(tk.Frame):
 
             post_frame = tk.Frame(posts_frame, bd=2, relief="groove")
             post_frame.pack_propagate(False)
-            post_frame.config(width=POST_WIDTH, height=POST_HEIGHT)
+            post_frame.config(width=post_width, height=post_height)
             post_frame.grid(row=row, column=col, padx=5, pady=5, sticky="n")
 
             date_str = (
@@ -396,10 +402,10 @@ class ProfileInterface(tk.Frame):
         if avatar_bytes:
             image_data = io.BytesIO(avatar_bytes)
             img = Image.open(image_data)
-            img = img.resize((100, 100), Image.Resampling.LANCZOS)
+            img = img.resize((200, 200), Image.Resampling.LANCZOS)
             return ImageTk.PhotoImage(img)
         else:
-            placeholder = Image.new("RGB", (100, 100), color="#8A2BE2")
+            placeholder = Image.new("RGB", (200, 200), color="#8A2BE2")
             return ImageTk.PhotoImage(placeholder)
 
     def upload_avatar(self):

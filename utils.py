@@ -11,8 +11,3 @@ def validate_password(password):
     digits = re.findall(r"[0-9]", password)
 
     return len(letters) >= 5 and len(digits) >= 3
-
-
-def hash_password(password):
-    """Возвращает SHA-256 хэш пароля."""
-    return hashlib.sha256(password.encode()).hexdigest()

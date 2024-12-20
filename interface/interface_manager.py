@@ -12,10 +12,14 @@ from interface.main_screen import MainInterface
 class InterfaceManager:
     def __init__(self, master, db: Session):
         self.user_crud = UserCRUD(db)
-        self.posts_crud = PostsCRUD(db)  # Вот здесь мы создаем экземпляр постов CRUD
+        self.posts_crud = PostsCRUD(db)
         self.master = master
         self.current_interface = None
         self.current_user = None
+
+        # Настройка grid для master
+        self.master.grid_rowconfigure(0, weight=1)
+        self.master.grid_columnconfigure(0, weight=1)
 
     def show_interface(self, interface_class, user=None, *args, **kwargs):
         if self.current_interface:
@@ -27,7 +31,7 @@ class InterfaceManager:
         self.current_interface = interface_class(
             self.master, self, user, self.main_window, *args, **kwargs
         )
-        self.current_interface.pack(fill=tk.BOTH, expand=True)
+        self.current_interface.grid(row=0, column=0, sticky="nsew")
 
     def login_success(self, user):
         self.current_user = user
