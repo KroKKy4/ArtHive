@@ -1,4 +1,3 @@
-import tkinter as tk
 from sqlalchemy.orm import Session
 
 from crud.user_crud import UserCRUD

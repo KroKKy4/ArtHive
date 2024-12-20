@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from db.base import create_db_engine, get_db, create_tables, delete_tables
+from db.base import create_db_engine, get_db, create_tables, delete_tables  # noqa
 from interface.interface_manager import InterfaceManager
 from interface.auth_screen import AuthInterface
 
