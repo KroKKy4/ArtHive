@@ -48,3 +48,19 @@ class UserCRUD:
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    def check_password(self, username: str, old_password: str) -> bool:
+        # Получаем захэшированный пароль из базы данных
+        result = self.db.query(User.password).filter(User.username == username).first()
+
+        # Проверяем, найден ли пользователь
+        if result is None:
+            return False  # Пользователь не найден
+
+        # Извлекаем строку с хэшем пароля
+        hashed_password = result.password if hasattr(result, "password") else result[0]
+
+        # Проверяем введённый пароль
+        return bcrypt.checkpw(
+            old_password.encode("utf-8"), hashed_password.encode("utf-8")
+        )

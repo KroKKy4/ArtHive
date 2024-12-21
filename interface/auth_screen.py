@@ -38,11 +38,11 @@ class AuthInterface(tk.Frame):
             text="Вход",
             font=("Arial", 18, "bold"),
             fg="#4B0082",
-            bg="#FFFFFF",
+            bg="#F0F0F0",
         ).pack(pady=20)
 
         tk.Label(
-            self, text="Логин:", font=("Arial", 12), fg="#4B0082", bg="#FFFFFF"
+            self, text="Логин:", font=("Arial", 12), fg="#4B0082", bg="#F0F0F0"
         ).pack()
         self.login_entry = tk.Entry(
             self, font=("Arial", 12), bg="white", fg="black", bd=2, relief="solid"
@@ -50,7 +50,7 @@ class AuthInterface(tk.Frame):
         self.login_entry.pack(pady=5)
 
         tk.Label(
-            self, text="Пароль:", font=("Arial", 12), fg="#4B0082", bg="#FFFFFF"
+            self, text="Пароль:", font=("Arial", 12), fg="#4B0082", bg="#F0F0F0"
         ).pack()
         self.password_entry = tk.Entry(
             self,
@@ -101,11 +101,11 @@ class AuthInterface(tk.Frame):
             text="Регистрация",
             font=("Arial", 18, "bold"),
             fg="#4B0082",
-            bg="#FFFFFF",
+            bg="#F0F0F0",
         ).pack(pady=20)
 
         tk.Label(
-            self, text="Логин:", font=("Arial", 12), fg="#4B0082", bg="#FFFFFF"
+            self, text="Логин:", font=("Arial", 12), fg="#4B0082", bg="#F0F0F0"
         ).pack()
         self.reg_login_entry = tk.Entry(
             self, font=("Arial", 12), bg="white", fg="black", bd=2, relief="solid"
@@ -114,7 +114,7 @@ class AuthInterface(tk.Frame):
         self.reg_login_entry.bind("<Return>", self.focus_next_field2)
 
         tk.Label(
-            self, text="Пароль:", font=("Arial", 12), fg="#4B0082", bg="#FFFFFF"
+            self, text="Пароль:", font=("Arial", 12), fg="#4B0082", bg="#F0F0F0"
         ).pack()
         self.reg_password_entry = tk.Entry(
             self,
@@ -133,7 +133,7 @@ class AuthInterface(tk.Frame):
             text="Подтвердите пароль:",
             font=("Arial", 12),
             fg="#4B0082",
-            bg="#FFFFFF",
+            bg="#F0F0F0",
         ).pack()
         self.reg_confirm_password_entry = tk.Entry(
             self,

@@ -71,7 +71,7 @@ class ProfileInterface(tk.Frame):
 
         # Фрейм для содержимого профиля
         profile_info_frame = tk.Frame(self.content_frame, bg="#FFFFFF")
-        profile_info_frame.pack(pady=20, expand=True)
+        profile_info_frame.pack(pady=20)
 
         self.avatar_image = self.load_avatar(self.user.avatar)
 
@@ -82,7 +82,7 @@ class ProfileInterface(tk.Frame):
             bg="#FFFFFF",
             relief="solid",
         )
-        avatar_label.grid(row=0, column=0, padx=20, pady=10)
+        avatar_label.pack(padx=20, pady=10)
 
         # Кнопка для загрузки аватарки
         upload_avatar_button = tk.Button(
@@ -94,7 +94,7 @@ class ProfileInterface(tk.Frame):
             relief="solid",
             command=self.upload_avatar,  # Добавляем метод для загрузки аватарки
         )
-        upload_avatar_button.grid(row=1, column=0, padx=20, pady=10)
+        upload_avatar_button.pack(padx=20, pady=10)
 
         username_display = (
             self.user.username if hasattr(self.user, "username") else "Unknown User"
@@ -106,19 +106,19 @@ class ProfileInterface(tk.Frame):
             fg="#4B0082",
             bg="#FFFFFF",
         )
-        login_label.grid(row=0, column=1, padx=20, pady=10, sticky="w")
+        login_label.pack(padx=20, pady=10)
 
         # Кнопка изменения профиля
-        edit_profile_button = tk.Button(
-            profile_info_frame,
-            text="Изменить данные профиля",
-            font=("Arial", 12),
-            bg="#8A2BE2",
-            fg="white",
-            relief="solid",
-            command=self.edit_profile,
+        edit_username_btn = tk.Button(
+            profile_info_frame, text="Изменить имя", command=self.edit_username
         )
-        edit_profile_button.grid(row=1, column=1, padx=20, pady=10)
+        edit_username_btn.pack(padx=10, pady=10)
+
+        # Кнопка "Изменить пароль"
+        edit_password_btn = tk.Button(
+            profile_info_frame, text="Изменить пароль", command=self.edit_password
+        )
+        edit_password_btn.pack(padx=10, pady=10)
 
         # Кнопки для действий
         action_buttons_frame = tk.Frame(self.content_frame, bg="#FFFFFF")
@@ -133,7 +133,7 @@ class ProfileInterface(tk.Frame):
             relief="solid",
             command=self.create_publication_window,
         )
-        create_publication_button.grid(row=0, column=0, padx=10, pady=5)
+        create_publication_button.pack(side="left", padx=10, pady=5)
 
         published_posts_button = tk.Button(
             action_buttons_frame,
@@ -144,7 +144,7 @@ class ProfileInterface(tk.Frame):
             relief="solid",
             command=self.view_published_posts,
         )
-        published_posts_button.grid(row=0, column=1, padx=10, pady=5)
+        published_posts_button.pack(side="left", padx=10, pady=5)
 
         saved_posts_button = tk.Button(
             action_buttons_frame,
@@ -155,7 +155,7 @@ class ProfileInterface(tk.Frame):
             relief="solid",
             command=self.view_saved_posts,
         )
-        saved_posts_button.grid(row=0, column=2, padx=10, pady=5)
+        saved_posts_button.pack(side="left", padx=10, pady=5)
 
     def on_mousewheel(self, event):
         self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
@@ -171,38 +171,46 @@ class ProfileInterface(tk.Frame):
         self.content_frame.grid(row=0, column=0, sticky="nsew")
         self.create_widgets()
 
-    def edit_profile(self):
-        edit_window = tk.Toplevel(self)
-        edit_window.title("Изменить профиль")
-        edit_window.geometry("400x250")
+    def edit_username(self):
+        edit_window = tk.Toplevel(self.master)
+        edit_window.title("Изменить имя пользователя")
+        edit_window.geometry("400x200")
+        edit_window.minsize(400, 200)
 
-        tk.Label(edit_window, text="Новое имя пользователя:", font=("Arial", 12)).pack(
-            pady=10
+        # Метка и поле для нового имени
+        username_label = tk.Label(
+            edit_window, text="Новое имя пользователя:", font=("Arial", 12)
         )
+        username_label.pack(pady=5)
         username_entry = tk.Entry(edit_window, font=("Arial", 12))
+        username_entry.insert(0, self.user.username)  # Предзаполняем текущим именем
         username_entry.pack(pady=5)
 
-        tk.Label(edit_window, text="Новый пароль:", font=("Arial", 12)).pack(pady=10)
-        password_entry = tk.Entry(edit_window, font=("Arial", 12), show="*")
-        password_entry.pack(pady=5)
-
-        def submit_changes():
+        # Кнопка "Сохранить"
+        def submit_username_changes():
             new_username = username_entry.get().strip()
-            new_password = password_entry.get().strip()
 
-            if not new_username and not new_password:
-                messagebox.showerror("Ошибка", "Заполните хотя бы одно поле!")
+            # Проверка, что поле заполнено
+            if not new_username:
+                messagebox.showerror("Ошибка", "Введите новое имя пользователя!")
+                return
+
+            # Проверка, что новое имя отличается от текущего
+            if new_username == self.user.username:
+                messagebox.showinfo("Информация", "Новое имя совпадает с текущим.")
                 return
 
             try:
                 updated_user = self.manager.user_crud.update_user(
-                    self.user.username, new_username=new_username, password=new_password
+                    username=self.user.username, new_username=new_username
                 )
-                messagebox.showinfo("Успех", "Данные успешно изменены!")
+                messagebox.showinfo("Успех", "Имя пользователя успешно изменено!")
 
+                # Обновляем данные в приложении
                 self.manager.current_user = updated_user
                 self.user = updated_user
                 self.refresh_profile_data()
+
             except ValueError as e:
                 messagebox.showerror("Ошибка", str(e))
             except Exception as e:
@@ -211,7 +219,82 @@ class ProfileInterface(tk.Frame):
                 edit_window.destroy()
 
         tk.Button(
-            edit_window, text="Сохранить", font=("Arial", 12), command=submit_changes
+            edit_window,
+            text="Сохранить",
+            font=("Arial", 12),
+            command=submit_username_changes,
+        ).pack(pady=20)
+
+    def edit_password(self):
+        edit_window = tk.Toplevel(self.master)
+        edit_window.title("Изменить пароль")
+        edit_window.geometry("400x300")
+        edit_window.minsize(300, 300)
+
+        # Поле для ввода старого пароля
+        old_password_label = tk.Label(
+            edit_window, text="Старый пароль:", font=("Arial", 12)
+        )
+        old_password_label.pack(pady=5)
+        old_password_entry = tk.Entry(edit_window, show="*", font=("Arial", 12))
+        old_password_entry.pack(pady=5)
+
+        # Поле для нового пароля
+        new_password_label = tk.Label(
+            edit_window, text="Новый пароль:", font=("Arial", 12)
+        )
+        new_password_label.pack(pady=5)
+        new_password_entry = tk.Entry(edit_window, show="*", font=("Arial", 12))
+        new_password_entry.pack(pady=5)
+
+        # Кнопка "Сохранить"
+        def submit_password_changes():
+            old_password = old_password_entry.get().strip()
+            new_password = new_password_entry.get().strip()
+
+            # Проверка, что оба поля заполнены
+            if not old_password or not new_password:
+                messagebox.showerror("Ошибка", "Заполните старый и новый пароли!")
+                return
+
+            # Проверка старого пароля
+            if not self.manager.user_crud.check_password(
+                self.user.username, old_password
+            ):
+                messagebox.showerror("Ошибка", "Неверный старый пароль!")
+                return
+
+            # Проверка, что новый пароль отличается от старого
+            if old_password == new_password:
+                messagebox.showerror(
+                    "Ошибка", "Новый пароль не должен совпадать со старым!"
+                )
+                return
+
+            try:
+                # Меняем только пароль, передаём новый пароль
+                updated_user = self.manager.user_crud.update_user(
+                    username=self.user.username, password=new_password
+                )
+                messagebox.showinfo("Успех", "Пароль успешно изменён!")
+
+                # Обновляем данные в приложении
+                self.manager.current_user = updated_user
+                self.user = updated_user
+                self.refresh_profile_data()
+
+            except ValueError as e:
+                messagebox.showerror("Ошибка", str(e))
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Произошла ошибка: {e}")
+            finally:
+                edit_window.destroy()
+
+        tk.Button(
+            edit_window,
+            text="Сохранить",
+            font=("Arial", 12),
+            command=submit_password_changes,
         ).pack(pady=20)
 
     def create_publication_window(self):
@@ -299,7 +382,8 @@ class ProfileInterface(tk.Frame):
     def show_posts_in_window(self, title, posts):
         posts_window = tk.Toplevel(self)
         posts_window.title(title)
-        posts_window.minsize(500, 500)
+        posts_window.geometry("550x550")
+        posts_window.minsize(520, 500)
         posts_window.maxsize(1200, 800)
 
         if not posts:
@@ -346,9 +430,6 @@ class ProfileInterface(tk.Frame):
                 if post.created_at
                 else "Без даты"
             )
-            tk.Label(
-                post_frame, text=f"Пост №{index + 1}", font=("Arial", 14, "bold")
-            ).pack(anchor="w", pady=(5, 0))
             tk.Label(
                 post_frame, text=f"Дата: {date_str}", font=("Arial", 10, "italic")
             ).pack(anchor="w", pady=(0, 5))

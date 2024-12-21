@@ -12,6 +12,23 @@ from const import (
 )
 
 
+# TODO при изменении пароля добавить проверку на текущий пароль +
+# TODO изменить цвет топ фрейма F0F0F0 +
+# TODO убрать нумерацию постов в "Опубликованные посты" +
+# TODO изменить разрешение окна "Опубликованные посты" +
+# TODO какие ошибки и сложности были в проекте - Цикличные импорты, сохранение картинок на компьютер пользователя,
+#                                                   передача данных пользователей в разные интерфейсы +
+# TODO добавить очистку поля поиска после нажатия на кнопку +
+
+# TODO попробовать добавить функционал с перекрытием окна
+# TODO добавить пагинацию
+# TODO добавить 2 хоткея один для esc(назад) и enter для поиска
+# TODO enter для перехода между полями в авторизации
+# TODO переход от тэгов к подтверждению создания публикации с помощью enter
+# TODO закрытие окна на enter или esc для "Опубликованные посты"
+# TODO добавить микро аватарку в создание поста
+
+
 class MainInterface(tk.Frame):
     def __init__(self, master: Tk, manager, user, *args, **kwargs):
         super().__init__(master)
@@ -26,7 +43,7 @@ class MainInterface(tk.Frame):
         self.master.resizable(False, False)  # Отключаем изменение размеров окна
 
         self.clear_window()
-        top_frame = tk.Frame(self, bg="#FFFFFF")
+        top_frame = tk.Frame(self, bg="#F0F0F0")
         top_frame.pack(fill="x", pady=10)
 
         search_label = tk.Label(
@@ -34,7 +51,7 @@ class MainInterface(tk.Frame):
             text="Поиск изображений:",
             font=("Arial", 12),
             fg="#4B0082",
-            bg="#FFFFFF",
+            bg="#F0F0F0",
         )
         search_label.pack(side="left", padx=10)
 
@@ -322,9 +339,14 @@ class MainInterface(tk.Frame):
             if not found_posts:
                 messagebox.showinfo("Поиск", "Постов с таким хэштегом не найдено.")
                 return
+
             self.show_filtered_posts(found_posts)
+
         except Exception as e:
             messagebox.showerror("Ошибка", f"Не удалось выполнить поиск: {e}")
+        finally:
+            # Очищаем поле поиска в любом случае (успешный поиск, неудачный или исключение)
+            self.search_entry.delete(0, tk.END)
 
     def show_profile(self):
         self.manager.show_profile_interface(self.user)
@@ -342,6 +364,8 @@ class MainInterface(tk.Frame):
         self.master.bind_all("<Control-a>", lambda event: self.show_all_posts())
         # Закрытие приложения по Ctrl+Q
         self.master.bind_all("<Control-q>", lambda event: self.master.destroy())
+        # Привязка нажатия Enter к строке поиска
+        self.search_entry.bind("<Return>", lambda event: self.search_images())
 
     def focus_search(self):
         if self.search_entry:
