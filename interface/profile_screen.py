@@ -300,13 +300,24 @@ class ProfileInterface(tk.Frame):
     def create_publication_window(self):
         post_window = tk.Toplevel(self)
         post_window.title("Создать публикацию")
-        post_window.geometry("500x400")
+        post_window.geometry("550x550")
 
         tk.Label(post_window, text="Изображение:", font=("Arial", 12)).pack(pady=5)
         image_frame = tk.Frame(post_window)
         image_frame.pack(pady=5)
 
         image_path_var = tk.StringVar()
+
+        # 1. Создаём "заглушку" (placeholder) через Pillow
+        placeholder_image = Image.new("RGBA", (150, 150), (200, 200, 200, 255))
+        placeholder_photo = ImageTk.PhotoImage(placeholder_image)
+
+        # 2. Делаем Label для отображения выбраной картинки (или заглушки)
+        preview_label = tk.Label(image_frame, image=placeholder_photo)  # type: ignore
+        preview_label.image = (
+            placeholder_photo  # чтобы изображение не "собиралось" сборщиком мусора
+        )
+        preview_label.pack(side="left", padx=10)
 
         def choose_image():
             filename = filedialog.askopenfilename(
@@ -315,14 +326,29 @@ class ProfileInterface(tk.Frame):
             )
             if filename:
                 image_path_var.set(filename)
+                # Загружаем картинку и уменьшаем до 150x150
+                try:
+                    img = Image.open(filename)
+                    img = img.resize((150, 150), Image.Resampling.LANCZOS)
+                    photo = ImageTk.PhotoImage(img)
+                    # Обновляем Label, чтобы показывать выбранное изображение
+                    preview_label.configure(image=photo)  # type: ignore
+                    preview_label.image = photo
+                except Exception as e:
+                    messagebox.showerror(
+                        "Ошибка", f"Не удалось загрузить картинку: {e}"
+                    )
 
+        # Кнопка «Выбрать изображение»
         tk.Button(image_frame, text="Выбрать изображение", command=choose_image).pack(
-            side="left", padx=5
+            side="top", padx=5
         )
+
+        # Располагаем путь к файлу под кнопкой
         image_path_label = tk.Label(
             image_frame, textvariable=image_path_var, font=("Arial", 10)
         )
-        image_path_label.pack(side="left", padx=5)
+        image_path_label.pack(side="top", pady=5)
 
         tk.Label(post_window, text="Описание:", font=("Arial", 12)).pack(pady=5)
         description_text = tk.Text(post_window, width=50, height=5, font=("Arial", 12))
