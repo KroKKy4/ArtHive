@@ -1,14 +1,14 @@
-import os
-import tkinter as tk
-from tkinter import messagebox, filedialog
 import io
+import os
+
+import tkinter as tk
+from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
-from tkinter import Tk
 
 from const import (
+    MAIN_SCREEN_POST_COUNT,
     MAIN_SCREEN_POST_WIDTH,
     MAIN_SCREEN_POST_HEIGHT,
-    MAIN_SCREEN_POST_COUNT,
 )
 
 
@@ -19,9 +19,9 @@ from const import (
 # TODO какие ошибки и сложности были в проекте - Цикличные импорты, сохранение картинок на компьютер пользователя,
 #                                                   передача данных пользователей в разные интерфейсы +
 # TODO добавить очистку поля поиска после нажатия на кнопку +
+# TODO добавить пагинацию +
 
 # TODO попробовать добавить функционал с перекрытием окна
-# TODO добавить пагинацию
 # TODO добавить 2 хоткея один для esc(назад) и enter для поиска
 # TODO enter для перехода между полями в авторизации
 # TODO переход от тэгов к подтверждению создания публикации с помощью enter
@@ -30,17 +30,21 @@ from const import (
 
 
 class MainInterface(tk.Frame):
-    def __init__(self, master: Tk, manager, user, *args, **kwargs):
+    def __init__(self, master: tk.Tk, manager, user, *args, **kwargs):
         super().__init__(master)
         self.search_entry = None
         self.manager = manager
         self.user = user
+
+        self.all_posts = []
+        self.current_page = 0
+        self.posts_per_page = 8
+
         self.main_window()
 
     def main_window(self):
-        # Устанавливаем фиксированный размер окна
-        self.master.geometry("1060x700")  # Увеличиваем ширину окна
-        self.master.resizable(False, False)  # Отключаем изменение размеров окна
+        self.master.geometry("1060x700")
+        self.master.resizable(False, False)
 
         self.clear_window()
         top_frame = tk.Frame(self, bg="#F0F0F0")
@@ -93,21 +97,40 @@ class MainInterface(tk.Frame):
         )
         show_all_button.pack(side="right", padx=10)
 
+        # Изначально показываем все посты
         self.show_all_posts()
         self.pack(fill=tk.BOTH, expand=True)
 
         # Устанавливаем хоткеи
         self.setup_hotkeys()
 
-    def render_posts(self, posts):
-        # Очищаем все элементы под строкой поиска
+    def render_posts(self):
+        """
+        Отрисовывает посты на текущей странице.
+        Для пагинации используем self.current_page и self.posts_per_page.
+        """
+        # Очищаем всё
         for widget in self.winfo_children():
             if widget != self.search_entry.master:
                 widget.destroy()
 
+        # Если нет постов, просто вывести надпись и выйти
+        if not self.all_posts:
+            tk.Label(self, text="Нет постов для отображения.", font=("Arial", 12)).pack(
+                pady=20
+            )
+            return
+
+        # Определяем срез постов, которые нужно показать
+        start_index = self.current_page * self.posts_per_page
+        end_index = start_index + self.posts_per_page
+        posts_to_show = self.all_posts[start_index:end_index]
+
+        # Создаём контейнер для всех постов
         posts_container = tk.Frame(self)
         posts_container.pack(fill="both", expand=True)
 
+        # В Canvas будем прокручивать, если вдруг посты не влезут по вертикали
         canvas = tk.Canvas(posts_container)
         canvas.pack(side="left", fill="both", expand=True)
 
@@ -121,19 +144,16 @@ class MainInterface(tk.Frame):
         canvas.create_window((0, 0), window=all_posts_frame, anchor="nw")
 
         def on_configure(event):
-            # Установка границ прокрутки
             canvas.configure(scrollregion=canvas.bbox("all"))
 
         all_posts_frame.bind("<Configure>", on_configure)
 
-        # Добавляем поддержку прокрутки колесиком мыши
         def _on_mousewheel(event):
             if event.delta:  # Windows и macOS
                 canvas.yview_scroll(-1 * (event.delta // 120), "units")
             elif event.num in (4, 5):  # Linux
                 canvas.yview_scroll(-1 if event.num == 4 else 1, "units")
 
-        # Привязки событий только для области canvas
         canvas.bind("<Enter>", lambda _: canvas.bind("<MouseWheel>", _on_mousewheel))
         canvas.bind("<Leave>", lambda _: canvas.unbind("<MouseWheel>"))
         canvas.bind("<Enter>", lambda _: canvas.bind("<Button-4>", _on_mousewheel))
@@ -141,22 +161,18 @@ class MainInterface(tk.Frame):
         canvas.bind("<Leave>", lambda _: canvas.unbind("<Button-4>"))
         canvas.bind("<Leave>", lambda _: canvas.unbind("<Button-5>"))
 
-        if not posts:
-            tk.Label(
-                all_posts_frame, text="Нет постов для отображения.", font=("Arial", 12)
-            ).pack(pady=20)
-            return
-
+        # Сетка: MAIN_SCREEN_POST_COUNT = 4 (столбцов)
         columns = MAIN_SCREEN_POST_COUNT
         post_width = MAIN_SCREEN_POST_WIDTH
         post_height = MAIN_SCREEN_POST_HEIGHT
 
+        # Допустим, хотим добавить "пустые" столбцы по бокам, если нужно
         total_columns = columns + 2
         all_posts_frame.grid_columnconfigure(0, weight=1)
         all_posts_frame.grid_columnconfigure(total_columns - 1, weight=1)
 
-        # Создаём карточки постов
-        for index, post in enumerate(posts):
+        # Размещаем посты в сетке
+        for index, post in enumerate(posts_to_show):
             row = index // columns
             col = (index % columns) + 1
 
@@ -200,12 +216,80 @@ class MainInterface(tk.Frame):
             )
             view_button.pack(anchor="center", pady=5)
 
+        # <-- NEW: блок с кнопками пагинации
+        pagination_frame = tk.Frame(self)
+        pagination_frame.pack(fill="x", pady=10)
+
+        total_posts = len(self.all_posts)
+        total_pages = (total_posts - 1) // self.posts_per_page + 1  # Округление вверх
+
+        # Кнопка "Назад"
+        if self.current_page > 0:
+            prev_button = tk.Button(
+                pagination_frame,
+                text="Назад",
+                command=self.prev_page,
+                bg="#8A2BE2",
+                fg="white",
+                relief="solid",
+                font=("Arial", 12),
+            )
+            prev_button.pack(side="left", padx=10)
+
+        # Текст "Страница X из Y"
+        page_label = tk.Label(
+            pagination_frame,
+            text=f"Страница {self.current_page + 1} из {total_pages}",
+            font=("Arial", 12),
+        )
+        page_label.pack(side="left", padx=10)
+
+        # Кнопка "Вперёд"
+        if self.current_page < total_pages - 1:
+            next_button = tk.Button(
+                pagination_frame,
+                text="Вперёд",
+                command=self.next_page,
+                bg="#8A2BE2",
+                fg="white",
+                relief="solid",
+                font=("Arial", 12),
+            )
+            next_button.pack(side="left", padx=10)
+
+    # <-- NEW: Методы переключения страниц
+    def next_page(self):
+        """
+        Переходим на следующую страницу и перерисовываем посты.
+        """
+        self.current_page += 1
+        self.render_posts()
+
+    def prev_page(self):
+        """
+        Переходим на предыдущую страницу и перерисовываем посты.
+        """
+        if self.current_page > 0:
+            self.current_page -= 1
+        self.render_posts()
+
     def show_all_posts(self):
+        # Получаем все посты из базы
         posts = self.manager.posts_crud.get_all_images()
-        self.render_posts(posts)
+        # Сохраняем в self.all_posts
+        self.all_posts = posts
+        # Сбрасываем текущую страницу
+        self.current_page = 0
+        # Отрисовываем
+        self.render_posts()
 
     def show_filtered_posts(self, posts):
-        self.render_posts(posts)
+        """
+        Аналогично show_all_posts, но для отфильтрованных.
+        """
+        self.all_posts = posts
+        self.current_page = 0
+        self.render_posts()
 
     def show_post_details(self, post):
         detail_window = tk.Toplevel(self)
@@ -270,7 +354,7 @@ class MainInterface(tk.Frame):
                     ("PNG", "*.png"),
                     ("All Files", "*.*"),
                 ],
-                initialdir="C:\\",  # Можно задать начальную директорию, например корень диска
+                initialdir="C:\\",
             )
             if not save_path:
                 return
@@ -311,7 +395,6 @@ class MainInterface(tk.Frame):
             except Exception as e:
                 messagebox.showerror("Ошибка", f"Не удалось сохранить пост: {e}")
 
-        # Кнопка "Сохранить пост"
         save_button = tk.Button(
             detail_window,
             text="Сохранить пост",
@@ -338,6 +421,10 @@ class MainInterface(tk.Frame):
             found_posts = self.manager.posts_crud.search_posts_by_tags(search_query)
             if not found_posts:
                 messagebox.showinfo("Поиск", "Постов с таким хэштегом не найдено.")
+                # Сбрасываем в пустой список и обновляем
+                self.all_posts = []
+                self.current_page = 0
+                self.render_posts()
                 return
 
             self.show_filtered_posts(found_posts)
@@ -345,7 +432,6 @@ class MainInterface(tk.Frame):
         except Exception as e:
             messagebox.showerror("Ошибка", f"Не удалось выполнить поиск: {e}")
         finally:
-            # Очищаем поле поиска в любом случае (успешный поиск, неудачный или исключение)
             self.search_entry.delete(0, tk.END)
 
     def show_profile(self):
@@ -356,15 +442,10 @@ class MainInterface(tk.Frame):
             widget.destroy()
 
     def setup_hotkeys(self):
-        # Переход в профиль по Ctrl+P
         self.master.bind_all("<Control-p>", lambda event: self.show_profile())
-        # Поиск постов по Ctrl+F
         self.master.bind_all("<Control-f>", lambda event: self.focus_search())
-        # Показ всех постов по Ctrl+A
         self.master.bind_all("<Control-a>", lambda event: self.show_all_posts())
-        # Закрытие приложения по Ctrl+Q
         self.master.bind_all("<Control-q>", lambda event: self.master.destroy())
-        # Привязка нажатия Enter к строке поиска
         self.search_entry.bind("<Return>", lambda event: self.search_images())
 
     def focus_search(self):
