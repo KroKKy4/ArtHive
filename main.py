@@ -9,6 +9,8 @@ if __name__ == "__main__":
     # create_tables(engine)  #  Использовать только при первом запуске программы
     # delete_tables(engine)  #  Использовать для удаления всех таблиц из базы данных
     root = tk.Tk()
+    photo = tk.PhotoImage(file="Kurama.png")
+    root.iconphoto(False, photo)
     root.title("ArtHive")
     root.geometry("1024x700+500+400")
     root.minsize(400, 400)

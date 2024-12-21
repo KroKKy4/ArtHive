@@ -48,6 +48,9 @@ class AuthInterface(tk.Frame):
             self, font=("Arial", 12), bg="white", fg="black", bd=2, relief="solid"
         )
         self.login_entry.pack(pady=5)
+        self.login_entry.bind(
+            "<Return>", lambda _: self.password_entry.focus()
+        )  # Фокус на пароль
 
         tk.Label(
             self, text="Пароль:", font=("Arial", 12), fg="#4B0082", bg="#F0F0F0"
@@ -62,6 +65,7 @@ class AuthInterface(tk.Frame):
             show="*",
         )
         self.password_entry.pack(pady=5)
+        self.password_entry.bind("<Return>", lambda _: self.login())  # Вход при Enter
 
         tk.Button(
             self,

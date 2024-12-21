@@ -312,7 +312,7 @@ class ProfileInterface(tk.Frame):
         placeholder_image = Image.new("RGBA", (150, 150), (200, 200, 200, 255))
         placeholder_photo = ImageTk.PhotoImage(placeholder_image)
 
-        # 2. Делаем Label для отображения выбраной картинки (или заглушки)
+        # 2. Делаем Label для отображения выбранной картинки (или заглушки)
         preview_label = tk.Label(image_frame, image=placeholder_photo)  # type: ignore
         preview_label.image = (
             placeholder_photo  # чтобы изображение не "собиралось" сборщиком мусора
@@ -360,6 +360,22 @@ class ProfileInterface(tk.Frame):
         tags_entry = tk.Entry(post_window, font=("Arial", 12))
         tags_entry.pack(pady=5)
 
+        # Кнопка "Создать публикацию"
+        create_button = tk.Button(
+            post_window,
+            text="Создать публикацию",
+            bg="#4B0082",
+            fg="white",
+            font=("Arial", 12),
+            command=lambda: create_post(),
+        )
+        create_button.pack(pady=20)
+
+        # Привязка Enter для переходов
+        description_text.bind("<Tab>", lambda e: tags_entry.focus())  # Переход на теги
+        tags_entry.bind("<Return>", lambda e: create_button.focus())  # Переход к кнопке
+        create_button.bind("<Return>", lambda e: create_post())  # Выполнение публикации
+
         def create_post():
             img_path = image_path_var.get().strip()
             description = description_text.get("1.0", tk.END).strip()
@@ -391,19 +407,28 @@ class ProfileInterface(tk.Frame):
                     tags=tags,
                     created_at=datetime.datetime.utcnow(),
                 )
-                messagebox.showinfo("Успех", "Публикация успешно создана!")
-                post_window.destroy()
+
+                # Показ успешного сообщения и возможность закрыть его Enter
+                def close_message(event=None):
+                    success_window.destroy()
+                    post_window.destroy()
+
+                success_window = tk.Toplevel(post_window)
+                success_window.title("Успех")
+                tk.Label(
+                    success_window,
+                    text="Публикация успешно создана!",
+                    font=("Arial", 12),
+                ).pack(pady=10)
+                close_button = tk.Button(
+                    success_window, text="Ок", command=close_message
+                )
+                close_button.pack(pady=10)
+                success_window.bind("<Return>", close_message)
+                success_window.focus_set()
+
             except Exception as e:
                 messagebox.showerror("Ошибка", f"Не удалось создать публикацию: {e}")
-
-        tk.Button(
-            post_window,
-            text="Создать публикацию",
-            bg="#4B0082",
-            fg="white",
-            font=("Arial", 12),
-            command=create_post,
-        ).pack(pady=20)
 
     def show_posts_in_window(self, title, posts):
         posts_window = tk.Toplevel(self)
@@ -411,6 +436,9 @@ class ProfileInterface(tk.Frame):
         posts_window.geometry("550x550")
         posts_window.minsize(520, 500)
         posts_window.maxsize(1200, 800)
+
+        # Добавляем хоткей на Esc для закрытия окна
+        posts_window.bind("<Escape>", lambda event: posts_window.destroy())
 
         if not posts:
             tk.Label(
