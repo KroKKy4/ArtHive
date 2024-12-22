@@ -1,13 +1,14 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
+from tkinter import ttk
 from PIL import Image, ImageTk
 import io
 import datetime
 
 from const import (
-    PROFILE_SCREEN_POST_COUNT,
-    PROFILE_SCREEN_POST_WIDTH,
-    PROFILE_SCREEN_POST_HEIGHT,
+    POSTS_WINDOW_HEIGHT,
+    POSTS_WINDOW_WIDTH,
+    POSTS_WINDOW_COUNT,
 )
 
 
@@ -25,42 +26,34 @@ class ProfileInterface(tk.Frame):
         self.grid_columnconfigure(0, weight=1)
 
         # Создаём фрейм для содержимого
-        self.content_frame = tk.Frame(self, bg="#FFFFFF")
+        self.content_frame = tk.Frame(self, bg="#F7F7F7")
         self.content_frame.grid(row=0, column=0, sticky="nsew")
 
         # Создаём интерфейс
         self.create_widgets()
 
     def create_top_frame(self):
-        top_frame = tk.Frame(self.content_frame, bg="#FFFFFF")
+        top_frame = tk.Frame(self.content_frame, bg="#E8F0FE")
         top_frame.pack(fill="x", side="top")
 
         # Фрейм для кнопки "Назад"
-        left_frame = tk.Frame(top_frame, bg="#FFFFFF")
+        left_frame = tk.Frame(top_frame, bg="#E8F0FE")
         left_frame.pack(side="left", fill="y")
 
-        back_button = tk.Button(
+        back_button = ttk.Button(
             left_frame,
             text="← Назад",
-            font=("Arial", 12),
-            bg="#4B0082",
-            fg="white",
-            relief="solid",
             command=self.main_window_callback,
         )
         back_button.pack(padx=10, pady=5)
 
         # Фрейм для кнопки "Выйти"
-        right_frame = tk.Frame(top_frame, bg="#FFFFFF")
+        right_frame = tk.Frame(top_frame, bg="#E8F0FE")
         right_frame.pack(side="right", fill="y")
 
-        logout_button = tk.Button(
+        logout_button = ttk.Button(
             right_frame,
             text="Выйти",
-            font=("Arial", 12),
-            bg="#8A2BE2",
-            fg="white",
-            relief="solid",
             command=self.logout,
         )
         logout_button.pack(padx=10, pady=5)
@@ -70,7 +63,7 @@ class ProfileInterface(tk.Frame):
         self.create_top_frame()
 
         # Фрейм для содержимого профиля
-        profile_info_frame = tk.Frame(self.content_frame, bg="#FFFFFF")
+        profile_info_frame = tk.Frame(self.content_frame, bg="#F7F7F7")
         profile_info_frame.pack(pady=20)
 
         self.avatar_image = self.load_avatar(self.user.avatar)
@@ -85,13 +78,9 @@ class ProfileInterface(tk.Frame):
         avatar_label.pack(padx=20, pady=10)
 
         # Кнопка для загрузки аватарки
-        upload_avatar_button = tk.Button(
+        upload_avatar_button = ttk.Button(
             profile_info_frame,
             text="Загрузить аватар",
-            font=("Arial", 12),
-            bg="#8A2BE2",
-            fg="white",
-            relief="solid",
             command=self.upload_avatar,  # Добавляем метод для загрузки аватарки
         )
         upload_avatar_button.pack(padx=20, pady=10)
@@ -102,57 +91,45 @@ class ProfileInterface(tk.Frame):
         login_label = tk.Label(
             profile_info_frame,
             text=username_display,
-            font=("Arial", 20),
-            fg="#4B0082",
-            bg="#FFFFFF",
+            font=("Arial", 20, "bold"),
+            fg="#1A73E8",
+            bg="#F7F7F7",
         )
         login_label.pack(padx=20, pady=10)
 
         # Кнопка изменения профиля
-        edit_username_btn = tk.Button(
+        edit_username_btn = ttk.Button(
             profile_info_frame, text="Изменить имя", command=self.edit_username
         )
         edit_username_btn.pack(padx=10, pady=10)
 
         # Кнопка "Изменить пароль"
-        edit_password_btn = tk.Button(
+        edit_password_btn = ttk.Button(
             profile_info_frame, text="Изменить пароль", command=self.edit_password
         )
         edit_password_btn.pack(padx=10, pady=10)
 
         # Кнопки для действий
-        action_buttons_frame = tk.Frame(self.content_frame, bg="#FFFFFF")
+        action_buttons_frame = tk.Frame(self.content_frame, bg="#F7F7F7")
         action_buttons_frame.pack(pady=20)
 
-        create_publication_button = tk.Button(
+        create_publication_button = ttk.Button(
             action_buttons_frame,
             text="Создать публикацию",
-            font=("Arial", 12),
-            bg="#4B0082",
-            fg="white",
-            relief="solid",
             command=self.create_publication_window,
         )
         create_publication_button.pack(side="left", padx=10, pady=5)
 
-        published_posts_button = tk.Button(
+        published_posts_button = ttk.Button(
             action_buttons_frame,
             text="Опубликованные посты",
-            font=("Arial", 12),
-            bg="#4B0082",
-            fg="white",
-            relief="solid",
             command=self.view_published_posts,
         )
         published_posts_button.pack(side="left", padx=10, pady=5)
 
-        saved_posts_button = tk.Button(
+        saved_posts_button = ttk.Button(
             action_buttons_frame,
             text="Сохраненные посты",
-            font=("Arial", 12),
-            bg="#4B0082",
-            fg="white",
-            relief="solid",
             command=self.view_saved_posts,
         )
         saved_posts_button.pack(side="left", padx=10, pady=5)
@@ -167,7 +144,7 @@ class ProfileInterface(tk.Frame):
 
     def refresh_profile_data(self):
         self.content_frame.destroy()
-        self.content_frame = tk.Frame(self, bg="#FFFFFF")
+        self.content_frame = tk.Frame(self, bg="#F7F7F7")
         self.content_frame.grid(row=0, column=0, sticky="nsew")
         self.create_widgets()
 
@@ -182,7 +159,7 @@ class ProfileInterface(tk.Frame):
             edit_window, text="Новое имя пользователя:", font=("Arial", 12)
         )
         username_label.pack(pady=5)
-        username_entry = tk.Entry(edit_window, font=("Arial", 12))
+        username_entry = ttk.Entry(edit_window, font=("Arial", 12))
         username_entry.insert(0, self.user.username)  # Предзаполняем текущим именем
         username_entry.pack(pady=5)
 
@@ -218,10 +195,9 @@ class ProfileInterface(tk.Frame):
             finally:
                 edit_window.destroy()
 
-        tk.Button(
+        ttk.Button(
             edit_window,
             text="Сохранить",
-            font=("Arial", 12),
             command=submit_username_changes,
         ).pack(pady=20)
 
@@ -236,7 +212,7 @@ class ProfileInterface(tk.Frame):
             edit_window, text="Старый пароль:", font=("Arial", 12)
         )
         old_password_label.pack(pady=5)
-        old_password_entry = tk.Entry(edit_window, show="*", font=("Arial", 12))
+        old_password_entry = ttk.Entry(edit_window, show="*", font=("Arial", 12))
         old_password_entry.pack(pady=5)
 
         # Поле для нового пароля
@@ -244,7 +220,7 @@ class ProfileInterface(tk.Frame):
             edit_window, text="Новый пароль:", font=("Arial", 12)
         )
         new_password_label.pack(pady=5)
-        new_password_entry = tk.Entry(edit_window, show="*", font=("Arial", 12))
+        new_password_entry = ttk.Entry(edit_window, show="*", font=("Arial", 12))
         new_password_entry.pack(pady=5)
 
         # Кнопка "Сохранить"
@@ -290,10 +266,9 @@ class ProfileInterface(tk.Frame):
             finally:
                 edit_window.destroy()
 
-        tk.Button(
+        ttk.Button(
             edit_window,
             text="Сохранить",
-            font=("Arial", 12),
             command=submit_password_changes,
         ).pack(pady=20)
 
@@ -341,7 +316,7 @@ class ProfileInterface(tk.Frame):
                     )
 
         # Кнопка «Выбрать изображение»
-        tk.Button(image_frame, text="Выбрать изображение", command=choose_image).pack(
+        ttk.Button(image_frame, text="Выбрать изображение", command=choose_image).pack(
             side="top", padx=5
         )
 
@@ -358,24 +333,19 @@ class ProfileInterface(tk.Frame):
         tk.Label(
             post_window, text="Теги (до 5, разделите запятой):", font=("Arial", 12)
         ).pack(pady=5)
-        tags_entry = tk.Entry(post_window, font=("Arial", 12))
+        tags_entry = ttk.Entry(post_window, font=("Arial", 12))
         tags_entry.pack(pady=5)
 
         # Кнопка "Создать публикацию"
-        create_button = tk.Button(
+        ttk.Button(
             post_window,
             text="Создать публикацию",
-            bg="#4B0082",
-            fg="white",
-            font=("Arial", 12),
             command=lambda: create_post(),
-        )
-        create_button.pack(pady=20)
+        ).pack(pady=20)
 
         # Привязка Enter для переходов
         description_text.bind("<Tab>", lambda e: tags_entry.focus())  # Переход на теги
-        tags_entry.bind("<Return>", lambda e: create_button.focus())  # Переход к кнопке
-        create_button.bind("<Return>", lambda e: create_post())  # Выполнение публикации
+        tags_entry.bind("<Return>", lambda e: create_post())  # Выполнение публикации
 
         def create_post():
             img_path = image_path_var.get().strip()
@@ -421,10 +391,9 @@ class ProfileInterface(tk.Frame):
                     text="Публикация успешно создана!",
                     font=("Arial", 12),
                 ).pack(pady=10)
-                close_button = tk.Button(
-                    success_window, text="Ок", command=close_message
+                ttk.Button(success_window, text="Ок", command=close_message).pack(
+                    pady=10
                 )
-                close_button.pack(pady=10)
                 success_window.bind("<Return>", close_message)
                 success_window.focus_set()
 
@@ -434,32 +403,35 @@ class ProfileInterface(tk.Frame):
     def show_posts_in_window(self, title, posts):
         posts_window = tk.Toplevel(self)
         posts_window.title(title)
-        posts_window.geometry("550x550")
-        posts_window.minsize(520, 500)
+        posts_window.geometry("750x550")
+        posts_window.minsize(720, 500)
         posts_window.maxsize(1200, 800)
 
-        # Добавляем хоткей на Esc для закрытия окна
+        # Добавляем стиль и фон
+        posts_window.configure(bg="#F7F7F7")
         posts_window.bind("<Escape>", lambda event: posts_window.destroy())
 
         if not posts:
             tk.Label(
                 posts_window,
                 text="Нет постов для отображения.",
-                font=("Arial", 12),
+                font=("Arial", 14, "bold"),
+                bg="#F7F7F7",
+                fg="#1A73E8",
             ).pack(pady=20)
             return
 
-        container = tk.Frame(posts_window)
+        container = tk.Frame(posts_window, bg="#F7F7F7")
         container.pack(fill="both", expand=True)
 
-        canvas = tk.Canvas(container)
+        canvas = tk.Canvas(container, bg="#F7F7F7", highlightthickness=0)
         canvas.pack(side="left", fill="both", expand=True)
 
-        scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
         scrollbar.pack(side="right", fill="y")
 
         canvas.configure(yscrollcommand=scrollbar.set)
-        posts_frame = tk.Frame(canvas)
+        posts_frame = tk.Frame(canvas, bg="#FFFFFF")
         canvas.create_window((0, 0), window=posts_frame, anchor="nw")
 
         def on_configure(event):
@@ -467,18 +439,24 @@ class ProfileInterface(tk.Frame):
 
         posts_frame.bind("<Configure>", on_configure)
 
-        columns = PROFILE_SCREEN_POST_COUNT
-        post_width = PROFILE_SCREEN_POST_WIDTH
-        post_height = PROFILE_SCREEN_POST_HEIGHT
+        columns = POSTS_WINDOW_COUNT
+        post_width = POSTS_WINDOW_WIDTH
+        post_height = POSTS_WINDOW_HEIGHT
 
         for index, post in enumerate(posts):
             row = index // columns
             col = index % columns
 
-            post_frame = tk.Frame(posts_frame, bd=2, relief="groove")
+            post_frame = tk.Frame(
+                posts_frame,
+                bd=1,
+                relief="solid",
+                bg="#FFFFFF",
+                width=post_width,
+                height=post_height,
+            )
             post_frame.pack_propagate(False)
-            post_frame.config(width=post_width, height=post_height)
-            post_frame.grid(row=row, column=col, padx=5, pady=5, sticky="n")
+            post_frame.grid(row=row, column=col, padx=10, pady=10)
 
             date_str = (
                 post.created_at.strftime("%Y-%m-%d %H:%M")
@@ -486,17 +464,23 @@ class ProfileInterface(tk.Frame):
                 else "Без даты"
             )
             tk.Label(
-                post_frame, text=f"Дата: {date_str}", font=("Arial", 10, "italic")
-            ).pack(anchor="w", pady=(0, 5))
+                post_frame,
+                text=f"Дата: {date_str}",
+                font=("Arial", 10, "italic"),
+                bg="#FFFFFF",
+                fg="#555555",
+            ).pack(anchor="w", pady=(5, 5))
 
             desc = post.description if post.description else "Без описания"
             tk.Label(
                 post_frame,
                 text=desc,
                 font=("Arial", 12),
-                wraplength=200,
+                wraplength=180,
                 justify="left",
-            ).pack(anchor="w", pady=(0, 5))
+                bg="#FFFFFF",
+                fg="#000000",
+            ).pack(anchor="w", pady=(5, 5))
 
             tag_names = [it.tag.name for it in post.tags] if post.tags else []
             if tag_names:
@@ -504,27 +488,32 @@ class ProfileInterface(tk.Frame):
                     post_frame,
                     text="Теги: " + ", ".join(tag_names),
                     font=("Arial", 10, "italic"),
-                ).pack(anchor="w", pady=(0, 5))
+                    bg="#FFFFFF",
+                    fg="#888888",
+                ).pack(anchor="w", pady=(5, 5))
 
             if post.image_data:
                 try:
                     img_data = io.BytesIO(post.image_data)
                     img = Image.open(img_data)
-                    img = img.resize((150, 150), Image.Resampling.LANCZOS)
+                    img.thumbnail((150, 150), Image.Resampling.LANCZOS)
                     photo = ImageTk.PhotoImage(img)
-                    img_label = tk.Label(post_frame, image=photo)  # type: ignore
+                    img_label = tk.Label(post_frame, image=photo, bg="#FFFFFF")  # type: ignore
                     img_label.image = photo
-                    img_label.pack(anchor="w", pady=(5, 5))
+                    img_label.pack(anchor="center", pady=(5, 5))
                 except Exception as e:
                     tk.Label(
                         post_frame,
                         text=f"Ошибка при загрузке изображения: {e}",
                         fg="red",
+                        bg="#FFFFFF",
                     ).pack(anchor="w")
 
-        tk.Button(posts_window, text="Закрыть", command=posts_window.destroy).pack(
-            pady=10
-        )
+        ttk.Button(
+            posts_window,
+            text="Закрыть",
+            command=posts_window.destroy,
+        ).pack(pady=10)
 
     def view_published_posts(self):
         user_posts = self.manager.posts_crud.get_user_images(self.user.id)
@@ -538,7 +527,7 @@ class ProfileInterface(tk.Frame):
         if avatar_bytes:
             image_data = io.BytesIO(avatar_bytes)
             img = Image.open(image_data)
-            img = img.resize((200, 200), Image.Resampling.LANCZOS)
+            img.thumbnail((200, 200), Image.Resampling.LANCZOS)
             return ImageTk.PhotoImage(img)
         else:
             placeholder = Image.new("RGB", (200, 200), color="#8A2BE2")

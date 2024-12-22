@@ -3,6 +3,7 @@ import os
 
 import tkinter as tk
 from tkinter import filedialog, messagebox
+from tkinter import ttk
 from PIL import Image, ImageTk
 
 from const import (
@@ -30,52 +31,38 @@ class MainInterface(tk.Frame):
         self.master.resizable(False, False)
 
         self.clear_window()
-        top_frame = tk.Frame(self, bg="#F0F0F0")
+        top_frame = tk.Frame(self, bg="#E8F0FE")
         top_frame.pack(fill="x", pady=10)
 
         search_label = tk.Label(
             top_frame,
             text="Поиск изображений:",
-            font=("Arial", 12),
-            fg="#4B0082",
-            bg="#F0F0F0",
+            font=("Arial", 12, "bold"),
+            fg="#1A73E8",
+            bg="#E8F0FE",
         )
         search_label.pack(side="left", padx=10)
 
-        self.search_entry = tk.Entry(
-            top_frame, font=("Arial", 12), bg="white", fg="black", bd=2, relief="solid"
-        )
+        self.search_entry = ttk.Entry(top_frame, font=("Arial", 12))
         self.search_entry.pack(side="left", padx=10, pady=5)
 
-        search_button = tk.Button(
+        search_button = ttk.Button(
             top_frame,
             text="Найти",
-            font=("Arial", 12),
-            bg="#4B0082",
-            fg="white",
-            relief="solid",
             command=self.search_images,
         )
         search_button.pack(side="left", padx=10)
 
-        profile_button = tk.Button(
+        profile_button = ttk.Button(
             top_frame,
             text="Профиль",
-            font=("Arial", 12),
-            bg="#8A2BE2",
-            fg="white",
-            relief="solid",
             command=self.show_profile,
         )
         profile_button.pack(side="right", padx=10)
 
-        show_all_button = tk.Button(
+        show_all_button = ttk.Button(
             top_frame,
             text="Показать все посты",
-            font=("Arial", 12),
-            bg="#8A2BE2",
-            fg="white",
-            relief="solid",
             command=self.show_all_posts,
         )
         show_all_button.pack(side="right", padx=10)
@@ -99,9 +86,12 @@ class MainInterface(tk.Frame):
 
         # Если нет постов, просто вывести надпись и выйти
         if not self.all_posts:
-            tk.Label(self, text="Нет постов для отображения.", font=("Arial", 12)).pack(
-                pady=20
-            )
+            tk.Label(
+                self,
+                text="Нет постов для отображения.",
+                font=("Arial", 12, "bold"),
+                bg="#FAEBD7",
+            ).pack(pady=20)
             return
 
         # Определяем срез постов, которые нужно показать
@@ -110,20 +100,20 @@ class MainInterface(tk.Frame):
         posts_to_show = self.all_posts[start_index:end_index]
 
         # Создаём контейнер для всех постов
-        posts_container = tk.Frame(self)
+        posts_container = tk.Frame(self, bg="#F7F7F7")
         posts_container.pack(fill="both", expand=True)
 
         # В Canvas будем прокручивать, если вдруг посты не влезут по вертикали
-        canvas = tk.Canvas(posts_container)
+        canvas = tk.Canvas(posts_container, bg="#F7F7F7")
         canvas.pack(side="left", fill="both", expand=True)
 
-        scrollbar = tk.Scrollbar(
+        scrollbar = ttk.Scrollbar(
             posts_container, orient="vertical", command=canvas.yview
         )
         scrollbar.pack(side="right", fill="y")
 
         canvas.configure(yscrollcommand=scrollbar.set)
-        all_posts_frame = tk.Frame(canvas)
+        all_posts_frame = tk.Frame(canvas, bg="#F7F7F7")
         canvas.create_window((0, 0), window=all_posts_frame, anchor="nw")
 
         def on_configure(event):
@@ -159,7 +149,7 @@ class MainInterface(tk.Frame):
             row = index // columns
             col = (index % columns) + 1
 
-            post_frame = tk.Frame(all_posts_frame, bd=2, relief="groove")
+            post_frame = tk.Frame(all_posts_frame, bd=2, relief="groove", bg="#FFFFFF")
             post_frame.pack_propagate(False)
             post_frame.config(width=post_width, height=post_height)
             post_frame.grid(row=row, column=col, padx=5, pady=5, sticky="n")
@@ -170,7 +160,7 @@ class MainInterface(tk.Frame):
                     img = Image.open(img_data)
                     img.thumbnail((200, 150), Image.Resampling.LANCZOS)
                     photo = ImageTk.PhotoImage(img)
-                    img_label = tk.Label(post_frame, image=photo)  # type: ignore
+                    img_label = tk.Label(post_frame, image=photo, bg="#FFFFFF")  # type: ignore
                     img_label.image = photo
                     img_label.pack(anchor="center", pady=(5, 5))
                 except Exception as e:
@@ -178,28 +168,29 @@ class MainInterface(tk.Frame):
                         post_frame,
                         text=f"Ошибка при загрузке изображения: {e}",
                         fg="red",
+                        bg="#FFFFFF",
                     ).pack(anchor="w")
             else:
-                tk.Label(post_frame, text="Нет изображения", fg="gray").pack(
-                    anchor="center", pady=50
-                )
+                tk.Label(
+                    post_frame, text="Нет изображения", fg="gray", bg="#FFFFFF"
+                ).pack(anchor="center", pady=50)
 
             author_name = post.user.username if post.user else "Неизвестный автор"
-            tk.Label(post_frame, text=f"Автор: {author_name}", font=("Arial", 10)).pack(
-                anchor="center", pady=5
-            )
+            tk.Label(
+                post_frame,
+                text=f"Автор: {author_name}",
+                font=("Arial", 10),
+                bg="#FFFFFF",
+            ).pack(anchor="center", pady=5)
 
-            view_button = tk.Button(
+            view_button = ttk.Button(
                 post_frame,
                 text="Перейти к посту",
-                bg="#4B0082",
-                fg="white",
-                relief="solid",
                 command=lambda p=post: self.show_post_details(p),
             )
             view_button.pack(anchor="center", pady=5)
 
-        pagination_frame = tk.Frame(self)
+        pagination_frame = tk.Frame(self, bg="#E8F0FE")
         pagination_frame.pack(fill="x", pady=10)
 
         total_posts = len(self.all_posts)
@@ -207,14 +198,10 @@ class MainInterface(tk.Frame):
 
         # Кнопка "Назад"
         if self.current_page > 0:
-            prev_button = tk.Button(
+            prev_button = ttk.Button(
                 pagination_frame,
                 text="Назад",
                 command=self.prev_page,
-                bg="#8A2BE2",
-                fg="white",
-                relief="solid",
-                font=("Arial", 12),
             )
             prev_button.pack(side="left", padx=10)
 
@@ -223,23 +210,19 @@ class MainInterface(tk.Frame):
             pagination_frame,
             text=f"Страница {self.current_page + 1} из {total_pages}",
             font=("Arial", 12),
+            bg="#E8F0FE",
         )
         page_label.pack(side="left", padx=10)
 
         # Кнопка "Вперёд"
         if self.current_page < total_pages - 1:
-            next_button = tk.Button(
+            next_button = ttk.Button(
                 pagination_frame,
                 text="Вперёд",
                 command=self.next_page,
-                bg="#8A2BE2",
-                fg="white",
-                relief="solid",
-                font=("Arial", 12),
             )
             next_button.pack(side="left", padx=10)
 
-    # <-- NEW: Методы переключения страниц
     def next_page(self):
         """
         Переходим на следующую страницу и перерисовываем посты.
@@ -285,7 +268,7 @@ class MainInterface(tk.Frame):
                 img = Image.open(img_data)
                 img.thumbnail((700, 400), Image.Resampling.LANCZOS)
                 photo = ImageTk.PhotoImage(img)
-                img_label = tk.Label(detail_window, image=photo)  # type: ignore
+                img_label = tk.Label(detail_window, image=photo, bg="#FAFAFA")  # type: ignore
                 img_label.image = photo
                 img_label.pack(pady=(10, 20))
             except Exception as e:
@@ -296,29 +279,38 @@ class MainInterface(tk.Frame):
                 ).pack(anchor="w", pady=(5, 10))
 
         desc = post.description if post.description else "Без описания"
-        tk.Label(detail_window, text="Описание:", font=("Arial", 12, "bold")).pack(
-            anchor="w", padx=10, pady=(5, 0)
-        )
         tk.Label(
-            detail_window, text=desc, font=("Arial", 12), wraplength=700, justify="left"
+            detail_window, text="Описание:", font=("Arial", 12, "bold"), bg="#FAFAFA"
+        ).pack(anchor="w", padx=10, pady=(5, 0))
+        tk.Label(
+            detail_window,
+            text=desc,
+            font=("Arial", 12),
+            wraplength=700,
+            justify="left",
+            bg="#FAFAFA",
         ).pack(anchor="w", padx=10, pady=(0, 10))
 
         author_name = post.user.username if post.user else "Неизвестный автор"
-        tk.Label(detail_window, text=f"Автор: {author_name}", font=("Arial", 12)).pack(
-            anchor="w", padx=10, pady=(0, 10)
-        )
+        tk.Label(
+            detail_window,
+            text=f"Автор: {author_name}",
+            font=("Arial", 12),
+            bg="#FAFAFA",
+        ).pack(anchor="w", padx=10, pady=(0, 10))
 
         tag_names = [it.tag.name for it in post.tags] if post.tags else []
         if tag_names:
-            tk.Label(detail_window, text="Теги:", font=("Arial", 12, "bold")).pack(
-                anchor="w", padx=10, pady=(0, 5)
-            )
+            tk.Label(
+                detail_window, text="Теги:", font=("Arial", 12, "bold"), bg="#FAFAFA"
+            ).pack(anchor="w", padx=10, pady=(0, 5))
             tk.Label(
                 detail_window,
                 text=", ".join(tag_names),
                 font=("Arial", 10),
                 wraplength=700,
                 justify="left",
+                bg="#FAFAFA",
             ).pack(anchor="w", padx=10, pady=(0, 20))
 
         def download_image():
@@ -360,12 +352,9 @@ class MainInterface(tk.Frame):
             except Exception as e:
                 messagebox.showerror("Ошибка", f"Не удалось сохранить изображение: {e}")
 
-        download_button = tk.Button(
+        download_button = ttk.Button(
             detail_window,
             text="Скачать картинку",
-            bg="#4B0082",
-            fg="white",
-            relief="solid",
             command=download_image,
         )
         download_button.pack(pady=(10, 20))
@@ -377,17 +366,14 @@ class MainInterface(tk.Frame):
             except Exception as e:
                 messagebox.showerror("Ошибка", f"Не удалось сохранить пост: {e}")
 
-        save_button = tk.Button(
+        save_button = ttk.Button(
             detail_window,
             text="Сохранить пост",
-            bg="#4B0082",
-            fg="white",
-            relief="solid",
             command=save_post,
         )
         save_button.pack(pady=(0, 20))
 
-        close_button = tk.Button(
+        close_button = ttk.Button(
             detail_window, text="Закрыть", command=detail_window.destroy
         )
         close_button.pack(pady=10)

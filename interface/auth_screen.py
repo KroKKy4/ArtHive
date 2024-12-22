@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import ttk
 
 from db.base import get_db, create_db_engine
 from crud.auth_crud import AuthCRUD
@@ -33,58 +34,46 @@ class AuthInterface(tk.Frame):
 
     def login_window(self):
         self.clear_window()
+
+        self.configure(bg="#f7f7f7")
+
         tk.Label(
             self,
             text="Вход",
-            font=("Arial", 18, "bold"),
-            fg="#4B0082",
-            bg="#F0F0F0",
+            font=("Arial", 20, "bold"),
+            fg="#333333",
+            bg="#f7f7f7",
         ).pack(pady=20)
 
-        tk.Label(
-            self, text="Логин:", font=("Arial", 12), fg="#4B0082", bg="#F0F0F0"
-        ).pack()
-        self.login_entry = tk.Entry(
-            self, font=("Arial", 12), bg="white", fg="black", bd=2, relief="solid"
-        )
-        self.login_entry.pack(pady=5)
-        self.login_entry.bind(
-            "<Return>", lambda _: self.password_entry.focus()
-        )  # Фокус на пароль
+        form_frame = tk.Frame(self, bg="#f7f7f7")
+        form_frame.pack(pady=10)
 
         tk.Label(
-            self, text="Пароль:", font=("Arial", 12), fg="#4B0082", bg="#F0F0F0"
-        ).pack()
-        self.password_entry = tk.Entry(
-            self,
-            font=("Arial", 12),
-            bg="white",
-            fg="black",
-            bd=2,
-            relief="solid",
-            show="*",
-        )
-        self.password_entry.pack(pady=5)
-        self.password_entry.bind("<Return>", lambda _: self.login())  # Вход при Enter
+            form_frame, text="Логин:", font=("Arial", 12), fg="#555555", bg="#f7f7f7"
+        ).grid(row=0, column=0, padx=10, pady=5, sticky="w")
 
-        tk.Button(
-            self,
-            text="Войти",
-            font=("Arial", 12),
-            bg="#4B0082",
-            fg="white",
-            relief="solid",
-            command=self.login,
-        ).pack(pady=10)
-        tk.Button(
-            self,
-            text="Регистрация",
-            font=("Arial", 12),
-            bg="#8A2BE2",
-            fg="white",
-            relief="solid",
-            command=self.registration_window,
-        ).pack(pady=5)
+        self.login_entry = ttk.Entry(form_frame, font=("Arial", 12))
+        self.login_entry.grid(row=0, column=1, padx=10, pady=5)
+        self.login_entry.bind("<Return>", lambda _: self.password_entry.focus())
+
+        tk.Label(
+            form_frame, text="Пароль:", font=("Arial", 12), fg="#555555", bg="#f7f7f7"
+        ).grid(row=1, column=0, padx=10, pady=5, sticky="w")
+
+        self.password_entry = ttk.Entry(form_frame, font=("Arial", 12), show="*")
+        self.password_entry.grid(row=1, column=1, padx=10, pady=5)
+        self.password_entry.bind("<Return>", lambda _: self.login())
+
+        button_frame = tk.Frame(self, bg="#f7f7f7")
+        button_frame.pack(pady=20)
+
+        ttk.Button(button_frame, text="Войти", command=self.login).grid(
+            row=0, column=0, padx=10
+        )
+
+        ttk.Button(
+            button_frame, text="Регистрация", command=self.registration_window
+        ).grid(row=0, column=1, padx=10)
 
     def login(self):
         username = self.login_entry.get()
@@ -100,75 +89,59 @@ class AuthInterface(tk.Frame):
     def registration_window(self):
         self.clear_window()
 
+        self.configure(bg="#f7f7f7")
+
         tk.Label(
             self,
             text="Регистрация",
-            font=("Arial", 18, "bold"),
-            fg="#4B0082",
-            bg="#F0F0F0",
+            font=("Arial", 20, "bold"),
+            fg="#333333",
+            bg="#f7f7f7",
         ).pack(pady=20)
 
+        form_frame = tk.Frame(self, bg="#f7f7f7")
+        form_frame.pack(pady=10)
+
         tk.Label(
-            self, text="Логин:", font=("Arial", 12), fg="#4B0082", bg="#F0F0F0"
-        ).pack()
-        self.reg_login_entry = tk.Entry(
-            self, font=("Arial", 12), bg="white", fg="black", bd=2, relief="solid"
-        )
-        self.reg_login_entry.pack(pady=5)
+            form_frame, text="Логин:", font=("Arial", 12), fg="#555555", bg="#f7f7f7"
+        ).grid(row=0, column=0, padx=10, pady=5, sticky="w")
+
+        self.reg_login_entry = ttk.Entry(form_frame, font=("Arial", 12))
+        self.reg_login_entry.grid(row=0, column=1, padx=10, pady=5)
         self.reg_login_entry.bind("<Return>", self.focus_next_field2)
 
         tk.Label(
-            self, text="Пароль:", font=("Arial", 12), fg="#4B0082", bg="#F0F0F0"
-        ).pack()
-        self.reg_password_entry = tk.Entry(
-            self,
-            font=("Arial", 12),
-            bg="white",
-            fg="black",
-            bd=2,
-            relief="solid",
-            show="*",
-        )
-        self.reg_password_entry.pack(pady=5)
+            form_frame, text="Пароль:", font=("Arial", 12), fg="#555555", bg="#f7f7f7"
+        ).grid(row=1, column=0, padx=10, pady=5, sticky="w")
+
+        self.reg_password_entry = ttk.Entry(form_frame, font=("Arial", 12), show="*")
+        self.reg_password_entry.grid(row=1, column=1, padx=10, pady=5)
         self.reg_password_entry.bind("<Return>", self.focus_next_field2)
 
         tk.Label(
-            self,
+            form_frame,
             text="Подтвердите пароль:",
             font=("Arial", 12),
-            fg="#4B0082",
-            bg="#F0F0F0",
-        ).pack()
-        self.reg_confirm_password_entry = tk.Entry(
-            self,
-            font=("Arial", 12),
-            bg="white",
-            fg="black",
-            bd=2,
-            relief="solid",
-            show="*",
+            fg="#555555",
+            bg="#f7f7f7",
+        ).grid(row=2, column=0, padx=10, pady=5, sticky="w")
+
+        self.reg_confirm_password_entry = ttk.Entry(
+            form_frame, font=("Arial", 12), show="*"
         )
-        self.reg_confirm_password_entry.pack(pady=5)
+        self.reg_confirm_password_entry.grid(row=2, column=1, padx=10, pady=5)
         self.reg_confirm_password_entry.bind("<Return>", self.register_action)
 
-        tk.Button(
-            self,
-            text="Зарегистрироваться",
-            font=("Arial", 12),
-            bg="#4B0082",
-            fg="white",
-            relief="solid",
-            command=self.registration,
-        ).pack(pady=10)
-        tk.Button(
-            self,
-            text="Назад",
-            font=("Arial", 12),
-            bg="#8A2BE2",
-            fg="white",
-            relief="solid",
-            command=self.login_window,
-        ).pack(pady=5)
+        button_frame = tk.Frame(self, bg="#f7f7f7")
+        button_frame.pack(pady=20)
+
+        ttk.Button(
+            button_frame, text="Зарегистрироваться", command=self.registration
+        ).grid(row=0, column=0, padx=10)
+
+        ttk.Button(button_frame, text="Назад", command=self.login_window).grid(
+            row=0, column=1, padx=10
+        )
 
     def focus_next_field2(self, event=None):
         widget = event.widget
