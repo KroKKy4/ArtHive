@@ -321,6 +321,7 @@ class ProfileInterface(tk.Frame):
 
         def choose_image():
             filename = filedialog.askopenfilename(
+                parent=post_window,
                 title="Выберите изображение для публикации",
                 filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.gif")],
             )
